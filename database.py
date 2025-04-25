@@ -16,5 +16,3 @@ Base = declarative_base()
 def init_db():
     from models import db_service, db_brochure
     Base.metadata.create_all(bind=engine)
-
-init_db()
