@@ -15,4 +15,8 @@ Base = declarative_base()
 # Auto-create tables
 def init_db():
     from models import db_service, db_brochure
+ print("✅ Successfully loaded db_service and db_brochure models")
+    except Exception as e:
+        print(f"❌ Error loading models: {e}")
     Base.metadata.create_all(bind=engine)
+print("✅ Base.metadata.create_all executed")
