@@ -17,3 +17,4 @@ def read_root():
     return {"message": "Giyo Clinic Backend is Running"}
 
 # Note: No uvicorn.run here - Railway handles ASGI app startup
+# Trigger redeploy
