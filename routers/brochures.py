@@ -34,7 +34,8 @@ def calculate_status(brochure):
     else:
         return "active"
 
-@router.get("/", response_model=List[Brochure])
+@router.get("/")
+
 def get_brochures(page: int = 1, limit: int = 20, db: Session = Depends(get_db)):
     brochures = db.query(BrochureDB).all()
     result = []
