@@ -1,20 +1,28 @@
+# FastAPI main app with API versioning and CORS setup
 from fastapi import FastAPI
-from routers import services, brochures
-from database import init_db  # Import the init_db function
+from database import engine, Base
+from routers import services, brochures, info
+from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
 
-# Initialize Database (Auto-create tables if they don't exist)
-init_db()
+# Initialize Database
+Base.metadata.create_all(bind=engine)
 
-# Include routers
-app.include_router(services.router, prefix="/api/services", tags=["Services"])
-app.include_router(brochures.router, prefix="/api/brochures", tags=["Brochures"])
+# CORS Configuration
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["https://giyo-frontend.vercel.app"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
-# Root endpoint
+# Include Routers with API Versioning
+app.include_router(services.router, prefix="/api/v1/services", tags=["Services"])
+app.include_router(brochures.router, prefix="/api/v1/brochures", tags=["Brochures"])
+app.include_router(info.router, prefix="/api/v1", tags=["Info"])
+
 @app.get("/")
 def read_root():
-    return {"message": "Giyo Clinic Backend is Running"}
-
-# Note: No uvicorn.run here - Railway handles ASGI app startup
-# Trigger redeploy
+    return {"message": "Welcome to Giyo Backend API. Use /api/v1/ for endpoints."}
