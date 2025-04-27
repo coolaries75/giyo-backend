@@ -1,15 +1,14 @@
-
 from sqlalchemy import Column, Integer, String, Text, TIMESTAMP
 from database import Base
+from datetime import datetime
 
-class AdminActionLog(Base):
+class DBLogs(Base):
     __tablename__ = "admin_action_logs"
 
     id = Column(Integer, primary_key=True, index=True)
-    admin_name = Column(String(100))
-    role = Column(String(50))
+    user_id = Column(Integer)
     action = Column(String(50))
-    item_type = Column(String(50))
-    item_id = Column(Integer)
-    notes = Column(Text)
-    timestamp = Column(TIMESTAMP)
+    target_type = Column(String(50))
+    target_id = Column(Integer)
+    description = Column(Text)
+    timestamp = Column(TIMESTAMP, default=datetime.utcnow)
