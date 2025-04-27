@@ -4,10 +4,10 @@ from typing import List
 from database import SessionLocal
 from models.brochure_model import Brochure
 from utils.response_wrapper import success_response, error_response
-from role_check_util import check_role
-from logging_db_util import log_db_action
-from logging_debug_util import log_debug_action
-from pagination_util import paginate
+from utils.role_check_util import check_role
+from utils.logging_db_util import log_db_action
+from utils.logging_debug_util import log_debug_action
+from utils.pagination_util import paginate
 
 router = APIRouter()
 db = SessionLocal()
