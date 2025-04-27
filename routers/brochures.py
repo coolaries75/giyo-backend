@@ -5,7 +5,7 @@ from database import SessionLocal
 from models.brochure_model import Brochure
 from utils.response_wrapper import success_response, error_response
 from utils.role_check_util import check_role
-from utils.logging_db_util import log_db_action
+# from utils.logging_db_util import log_db_action
 from utils.logging_debug_util import log_debug_action
 from utils.pagination_util import paginate
 
@@ -52,7 +52,8 @@ def create_brochure(request: Request, brochure: Brochure):
         db.add(brochure)
         db.commit()
         db.refresh(brochure)
-        log_db_action(db, admin_name, role, f"Created brochure {brochure.id}")
+        # log_db_action(db, admin_name, role, f"Created brochure {brochure.id}")
+log_debug_action(f"{admin_name} ({role}) created brochure ID {brochure.id}")
         log_debug_action(f"{admin_name} ({role}) created brochure ID {brochure.id}")
         return success_response("Brochure created", {"id": brochure.id})
     except Exception as e:
@@ -92,7 +93,8 @@ def delete_brochure(request: Request, brochure_id: int):
             log_debug_action(f"{admin_name} ({role}) soft deleted brochure {brochure_id}")
 
         db.commit()
-        log_db_action(db, admin_name, role, f"Deleted brochure {brochure_id}")
+        # log_db_action(db, admin_name, role, f"Deleted brochure {brochure_id}")
+log_debug_action(f"{admin_name} ({role}) deleted brochure ID {brochure_id}")
         return success_response("Brochure deleted")
     except Exception as e:
         db.rollback()
