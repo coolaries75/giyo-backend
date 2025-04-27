@@ -1,13 +1,11 @@
-# FastAPI main app with API versioning and CORS setup
 from fastapi import FastAPI
-from database import engine, Base
-from routers import services, brochures, info
 from fastapi.middleware.cors import CORSMiddleware
 
-app = FastAPI()
+from routers import brochures, services, info, schedule, docs_info
 
-# Initialize Database
-Base.metadata.create_all(bind=engine)
+from database import Base, engine
+
+app = FastAPI()
 
 # CORS Configuration
 app.add_middleware(
@@ -18,11 +16,12 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Include Routers with API Versioning
-app.include_router(services.router, prefix="/api/v1/services", tags=["Services"])
-app.include_router(brochures.router, prefix="/api/v1/brochures", tags=["Brochures"])
-app.include_router(info.router, prefix="/api/v1", tags=["Info"])
+# Database Initialization
+Base.metadata.create_all(bind=engine)
 
-@app.get("/")
-def read_root():
-    return {"message": "Welcome to Giyo Backend API. Use /api/v1/ for endpoints."}
+# Routers
+app.include_router(services.router, prefix="/api/v1/services")
+app.include_router(brochures.router, prefix="/api/v1/brochures")
+app.include_router(info.router, prefix="/api/v1/info")
+app.include_router(schedule.router, prefix="/api/v1/schedule")
+app.include_router(docs_info.router, prefix="/api/v1/docs-info")

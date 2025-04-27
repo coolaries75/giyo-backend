@@ -1,101 +1,113 @@
-# Services router with pagination and response wrapper
-from fastapi import APIRouter, Depends, HTTPException, Request, Header
-from sqlalchemy.orm import Session
-from database import SessionLocal
-from models.db_service import ServiceDB
-from models.service_model import Service, ServiceCreate, ServiceUpdate
-from utils.logging_db_util import log_admin_action as log_db_action
-from utils.logging_debug_util import log_admin_action as log_debug_action
-from utils.role_check_util import check_role
-from utils.response_wrapper import success_response, error_response
-from utils.pagination_util import apply_pagination
+from fastapi import APIRouter, HTTPException, Request
 from typing import List
+from database import SessionLocal
+from service_model import Service
+from response_wrapper import success_response, error_response
+from role_check_util import check_role
+from logging_db_util import log_db_action
+from logging_debug_util import log_debug_action
+from pagination_util import paginate
 
 router = APIRouter()
+db = SessionLocal()
 
-def get_db():
-    db = SessionLocal()
+class ServiceResponse:
+    def __init__(self, id, name, code, status, cta_link):
+        self.id = id
+        self.name = name
+        self.code = code
+        self.status = status
+        self.cta_link = cta_link
+
+@router.get("/", response_model=List[ServiceResponse])
+def get_services(request: Request, skip: int = 0, limit: int = 10):
     try:
-        yield db
-    finally:
-        db.close()
+        services = db.query(Service).filter(Service.is_deleted == False).offset(skip).limit(limit).all()
+        result = []
+        for s in services:
+            status = "archived" if not s.is_active else "active"
+            result.append(ServiceResponse(
+                id=s.id,
+                name=s.name,
+                code=s.code,
+                status=status,
+                cta_link=f"https://wa.me/965XXXXXXX?text=مرحباً، أود الاستفسار عن الخدمة {s.code}"
+            ))
+        return result
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
-@router.get("/", response_model=List[Service])
-def get_services(page: int = 1, limit: int = 20, db: Session = Depends(get_db)):
-    services = db.query(ServiceDB).filter(ServiceDB.is_active == True).all()
-    result = [Service.from_orm(s).dict() for s in services]
-    paginated = apply_pagination(result, page, limit)
-    return success_response(data=paginated, message="Services fetched successfully")
+@router.post("/", response_model=dict)
+def create_service(request: Request, service: Service):
+    admin_token = request.headers.get("x_admin_token")
+    admin_name = request.headers.get("x_admin_name")
+    role = check_role(admin_token)
 
-@router.post("/", response_model=Service)
-def create_service(service: ServiceCreate, request: Request, x_admin_token: str = Header(...), db: Session = Depends(get_db)):
-    role = check_role(x_admin_token)
-    if role not in ["super_admin", "post_admin"]:
-        raise HTTPException(status_code=403, detail="Insufficient permissions")
+    try:
+        db.add(service)
+        db.commit()
+        db.refresh(service)
+        log_db_action(db, admin_name, role, f"Created service {service.id}")
+        log_debug_action(f"{admin_name} ({role}) created service ID {service.id}")
+        return success_response("Service created", {"id": service.id})
+    except Exception as e:
+        db.rollback()
+        return error_response(str(e))
 
-    db_service = ServiceDB(**service.dict())
-    db.add(db_service)
-    db.commit()
-    db.refresh(db_service)
-
-    admin_user = request.headers.get("x-admin-name", "unknown")
-    log_db_action(db, admin_user, role, "Create", "Service", db_service.id)
-    log_debug_action(admin_user, "Create", "Service", db_service.id)
-
-    return success_response(data=Service.from_orm(db_service).dict(), message="Service created successfully")
-
-@router.put("/{service_id}", response_model=Service)
-def update_service(service_id: int, service: ServiceUpdate, request: Request, x_admin_token: str = Header(...), db: Session = Depends(get_db)):
-    role = check_role(x_admin_token)
-    if role not in ["super_admin", "post_admin"]:
-        raise HTTPException(status_code=403, detail="Insufficient permissions")
-
-    db_service = db.query(ServiceDB).filter(ServiceDB.id == service_id, ServiceDB.is_active == True).first()
-    if not db_service:
-        return error_response(message="Service not found", code=404)
-    for key, value in service.dict(exclude_unset=True).items():
-        setattr(db_service, key, value)
-    db.commit()
-    db.refresh(db_service)
-
-    admin_user = request.headers.get("x-admin-name", "unknown")
-    log_db_action(db, admin_user, role, "Update", "Service", db_service.id)
-    log_debug_action(admin_user, "Update", "Service", db_service.id)
-
-    return success_response(data=Service.from_orm(db_service).dict(), message="Service updated successfully")
+@router.put("/{service_id}")
+def update_service(request: Request, service_id: int, service_data: dict):
+    try:
+        service = db.query(Service).filter(Service.id == service_id, Service.is_deleted == False).first()
+        if not service:
+            return error_response("Service not found")
+        for key, value in service_data.items():
+            setattr(service, key, value)
+        db.commit()
+        return success_response("Service updated")
+    except Exception as e:
+        db.rollback()
+        return error_response(str(e))
 
 @router.delete("/{service_id}")
-def delete_service(service_id: int, request: Request, x_admin_token: str = Header(...), db: Session = Depends(get_db)):
-    role = check_role(x_admin_token)
-    if role not in ["super_admin", "post_admin"]:
-        raise HTTPException(status_code=403, detail="Insufficient permissions")
+def delete_service(request: Request, service_id: int):
+    admin_token = request.headers.get("x_admin_token")
+    admin_name = request.headers.get("x_admin_name")
+    role = check_role(admin_token)
 
-    db_service = db.query(ServiceDB).filter(ServiceDB.id == service_id, ServiceDB.is_active == True).first()
-    if not db_service:
-        return error_response(message="Service not found", code=404)
-    db_service.is_active = False
-    db.commit()
+    try:
+        service = db.query(Service).filter(Service.id == service_id).first()
+        if not service:
+            return error_response("Service not found")
 
-    admin_user = request.headers.get("x-admin-name", "unknown")
-    log_db_action(db, admin_user, role, "Archive", "Service", db_service.id)
-    log_debug_action(admin_user, "Archive", "Service", db_service.id)
+        if role == "super_admin":
+            db.delete(service)
+            log_debug_action(f"{admin_name} (super_admin) permanently deleted service {service_id}")
+        else:
+            service.is_deleted = True
+            log_debug_action(f"{admin_name} ({role}) soft deleted service {service_id}")
 
-    return success_response(message="Service archived successfully")
+        db.commit()
+        log_db_action(db, admin_name, role, f"Deleted service {service_id}")
+        return success_response("Service deleted")
+    except Exception as e:
+        db.rollback()
+        return error_response(str(e))
 
-@router.delete("/{service_id}/permanent")
-def hard_delete_service(service_id: int, x_admin_token: str = Header(...), db: Session = Depends(get_db)):
-    role = check_role(x_admin_token)
+@router.delete("/permanent/{service_id}")
+def hard_delete_service(request: Request, service_id: int):
+    admin_token = request.headers.get("x_admin_token")
+    role = check_role(admin_token)
+
     if role != "super_admin":
-        raise HTTPException(status_code=403, detail="Insufficient permissions")
+        return error_response("Unauthorized for permanent delete")
 
-    service = db.query(ServiceDB).filter(ServiceDB.id == service_id).first()
-    if not service:
-        return error_response(message="Service not found", code=404)
-
-    db.delete(service)
-    db.commit()
-
-    return success_response(message="Service permanently deleted")
-
-# TODO: Migrate role-checking to JWT/OAuth in future versions.
-# TODO: Implement multilingual responses in future versions.
+    try:
+        service = db.query(Service).filter(Service.id == service_id).first()
+        if not service:
+            return error_response("Service not found")
+        db.delete(service)
+        db.commit()
+        return success_response("Service permanently deleted")
+    except Exception as e:
+        db.rollback()
+        return error_response(str(e))
