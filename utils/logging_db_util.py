@@ -1,36 +1,36 @@
 import logging
-from models.db_logs import DBLogs
+from models.db_logs import LogEntry
 from database import SessionLocal
 
-# Configure logging only if not already configured
-if not logging.getLogger().hasHandlers():
-    logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+# Configure logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
-def log_action(user_id, action, target_type, target_id, description=None):
-    """
-    Logs an action performed by a user into the database and console.
+# --- Simple Debugging Utilities ---
+def log_info(message: str):
+    print(f"[INFO] {message}")
 
-    Parameters:
-        user_id (int): ID of the user performing the action.
-        action (str): Description of the action.
-        target_type (str): The type of object affected (e.g., 'brochure', 'service').
-        target_id (int): ID of the target object.
-        description (str, optional): Additional details about the action.
-    """
+def log_error(message: str):
+    print(f"[ERROR] {message}")
+
+def log_debug(message: str):
+    print(f"[DEBUG] {message}")
+
+# --- Database Logging Function ---
+def log_action(user_id: int, action: str, target_type: str, target_id: int, details: str = None):
     session = SessionLocal()
     try:
-        log_entry = DBLogs(
+        log_entry = LogEntry(
             user_id=user_id,
             action=action,
             target_type=target_type,
             target_id=target_id,
-            description=description
+            details=details
         )
         session.add(log_entry)
         session.commit()
-        logging.info(f"User {user_id} performed '{action}' on {target_type} (ID: {target_id})")
+        logging.info(f"Logged action: {action} by User {user_id} on {target_type} {target_id}")
     except Exception as e:
         session.rollback()
-        logging.error(f"[DB LOG ERROR] User {user_id} - Action: {action} on {target_type} (ID: {target_id}) | Error: {str(e)}")
+        logging.error(f"Failed to log action: {e}")
     finally:
         session.close()
