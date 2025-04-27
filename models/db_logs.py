@@ -1,14 +1,13 @@
-from sqlalchemy import Column, Integer, String, Text, TIMESTAMP
+from sqlalchemy import Column, Integer, String, DateTime, func
 from database import Base
-from datetime import datetime
 
-class DBLogs(Base):
-    __tablename__ = "admin_action_logs"
+class LogEntry(Base):
+    __tablename__ = "logs"
 
     id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer)
-    action = Column(String(50))
-    target_type = Column(String(50))
-    target_id = Column(Integer)
-    description = Column(Text)
-    timestamp = Column(TIMESTAMP, default=datetime.utcnow)
+    user_id = Column(Integer, nullable=False)
+    action = Column(String(50), nullable=False)
+    target_type = Column(String(50), nullable=False)  # e.g., 'brochure', 'service'
+    target_id = Column(Integer, nullable=False)
+    details = Column(String(255), nullable=True)
+    timestamp = Column(DateTime(timezone=True), server_default=func.now())
