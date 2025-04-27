@@ -1,16 +1,14 @@
-# Trigger rebuild
 from fastapi import APIRouter, HTTPException, Request
 from typing import List
+from sqlalchemy.orm import Session
 from database import SessionLocal
 from models.brochure_model import Brochure
 from utils.response_wrapper import success_response, error_response
 from utils.role_check_util import check_role
-# from utils.logging_db_util import log_db_action
 from utils.logging_debug_util import log_debug_action
-from utils.pagination_util import paginate
+from utils.pagination_util import apply_pagination
 
-router = APIRouter()
-db = SessionLocal()
+router = APIRouter(prefix="/api/v1/brochures", tags=["Brochures"])
 
 class BrochureResponse:
     def __init__(self, id, title, code, status, cta_link):
@@ -20,13 +18,16 @@ class BrochureResponse:
         self.status = status
         self.cta_link = cta_link
 
+# --- GET Brochures with Pagination ---
 @router.get("/", response_model=List[BrochureResponse])
-def get_brochures(request: Request, skip: int = 0, limit: int = 10):
+def get_brochures(request: Request, page: int = 1, limit: int = 10):
+    session: Session = SessionLocal()
     try:
-        brochures = db.query(Brochure).filter(Brochure.is_deleted == False).offset(skip).limit(limit).all()
+        query = session.query(Brochure).filter(Brochure.is_deleted == False)
+        brochures, meta = apply_pagination(query, page, limit)
         result = []
         for b in brochures:
-            status = "archived" if b.is_active == False else "active"
+            status = "archived" if not b.is_active else "active"
             if b.start_date:
                 status = "upcoming"
             if b.expiry_date:
@@ -38,64 +39,74 @@ def get_brochures(request: Request, skip: int = 0, limit: int = 10):
                 status=status,
                 cta_link=f"https://wa.me/965XXXXXXX?text=مرحباً، أود الاستفسار عن العرض {b.code}"
             ))
-        return result
+        return success_response(result, meta)
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        return error_response(str(e))
+    finally:
+        session.close()
 
+# --- POST Create Brochure ---
 @router.post("/", response_model=dict)
 def create_brochure(request: Request, brochure: Brochure):
+    session: Session = SessionLocal()
     admin_token = request.headers.get("x_admin_token")
     admin_name = request.headers.get("x_admin_name")
     role = check_role(admin_token)
 
     try:
-        db.add(brochure)
-        db.commit()
-        db.refresh(brochure)
-        # log_db_action(db, admin_name, role, f"Created brochure {brochure.id}")
-log_debug_action(f"{admin_name} ({role}) created brochure ID {brochure.id}")
+        session.add(brochure)
+        session.commit()
+        session.refresh(brochure)
         log_debug_action(f"{admin_name} ({role}) created brochure ID {brochure.id}")
         return success_response("Brochure created", {"id": brochure.id})
     except Exception as e:
-        db.rollback()
+        session.rollback()
         return error_response(str(e))
+    finally:
+        session.close()
 
+# --- PUT Update Brochure ---
 @router.put("/{brochure_id}")
 def update_brochure(request: Request, brochure_id: int, brochure_data: dict):
+    session: Session = SessionLocal()
     try:
-        brochure = db.query(Brochure).filter(Brochure.id == brochure_id, Brochure.is_deleted == False).first()
+        brochure = session.query(Brochure).filter(Brochure.id == brochure_id, Brochure.is_deleted == False).first()
         if not brochure:
             return error_response("Brochure not found")
         for key, value in brochure_data.items():
             setattr(brochure, key, value)
-        db.commit()
+        session.commit()
         return success_response("Brochure updated")
     except Exception as e:
-        db.rollback()
+        session.rollback()
         return error_response(str(e))
+    finally:
+        session.close()
 
+# --- DELETE Brochure (Soft or Hard Delete) ---
 @router.delete("/{brochure_id}")
 def delete_brochure(request: Request, brochure_id: int):
+    session: Session = SessionLocal()
     admin_token = request.headers.get("x_admin_token")
     admin_name = request.headers.get("x_admin_name")
     role = check_role(admin_token)
 
     try:
-        brochure = db.query(Brochure).filter(Brochure.id == brochure_id).first()
+        brochure = session.query(Brochure).filter(Brochure.id == brochure_id).first()
         if not brochure:
             return error_response("Brochure not found")
 
         if role == "super_admin":
-            db.delete(brochure)
+            session.delete(brochure)
             log_debug_action(f"{admin_name} (super_admin) permanently deleted brochure {brochure_id}")
         else:
             brochure.is_deleted = True
             log_debug_action(f"{admin_name} ({role}) soft deleted brochure {brochure_id}")
 
-        db.commit()
-        # log_db_action(db, admin_name, role, f"Deleted brochure {brochure_id}")
-log_debug_action(f"{admin_name} ({role}) deleted brochure ID {brochure_id}")
+        session.commit()
         return success_response("Brochure deleted")
     except Exception as e:
-        db.rollback()
+        session.rollback()
         return error_response(str(e))
+    finally:
+        session.close()
