@@ -1,6 +1,7 @@
 from fastapi import APIRouter, HTTPException, Request
 from typing import List
 from sqlalchemy.orm import Session
+from pydantic import BaseModel
 from database import SessionLocal
 from models.brochure_model import Brochure
 from utils.response_wrapper import success_response, error_response
@@ -10,13 +11,12 @@ from utils.pagination_util import apply_pagination
 
 router = APIRouter(prefix="/api/v1/brochures", tags=["Brochures"])
 
-class BrochureResponse:
-    def __init__(self, id, title, code, status, cta_link):
-        self.id = id
-        self.title = title
-        self.code = code
-        self.status = status
-        self.cta_link = cta_link
+class BrochureResponse(BaseModel):
+    id: int
+    title: str
+    code: str
+    status: str
+    cta_link: str
 
 # --- GET Brochures with Pagination ---
 @router.get("/", response_model=List[BrochureResponse])
