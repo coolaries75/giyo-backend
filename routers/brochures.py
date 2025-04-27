@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, Request
 from typing import List
 from database import SessionLocal
-from brochure_model import Brochure
+from models.brochure_model import Brochure
 from response_wrapper import success_response, error_response
 from role_check_util import check_role
 from logging_db_util import log_db_action
