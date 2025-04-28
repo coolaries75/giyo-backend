@@ -1,4 +1,3 @@
-# We are not deleting the old logging files yet (logging_db_util.py, logging_debug_util.py).
 from fastapi import APIRouter, HTTPException, Request
 from typing import List
 from database import SessionLocal
@@ -42,7 +41,7 @@ def create_service(request: Request, service: Service):
         db.refresh(service)
         log_db_action(db, admin_name, role, f"Created service {service.id}")
         log_debug_action(f"{admin_name} ({role}) created service ID {service.id}")
-        return success_response("Service created", {"id": service.id})
+        return success_response({"message": "Service created", "id": service.id})
     except Exception as e:
         db.rollback()
         return error_response(str(e))
@@ -56,7 +55,7 @@ def update_service(request: Request, service_id: int, service_data: dict):
         for key, value in service_data.items():
             setattr(service, key, value)
         db.commit()
-        return success_response("Service updated")
+        return success_response({"message": "Service updated"})
     except Exception as e:
         db.rollback()
         return error_response(str(e))
@@ -81,7 +80,7 @@ def delete_service(request: Request, service_id: int):
 
         db.commit()
         log_db_action(db, admin_name, role, f"Deleted service {service_id}")
-        return success_response("Service deleted")
+        return success_response({"message": "Service deleted"})
     except Exception as e:
         db.rollback()
         return error_response(str(e))
@@ -100,7 +99,7 @@ def hard_delete_service(request: Request, service_id: int):
             return error_response("Service not found")
         db.delete(service)
         db.commit()
-        return success_response("Service permanently deleted")
+        return success_response({"message": "Service permanently deleted"})
     except Exception as e:
         db.rollback()
         return error_response(str(e))
