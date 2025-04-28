@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 from database import SessionLocal
 from models.brochure_model import Brochure
 from utils.response_wrapper import success_response, error_response
-from utils.role_check_util import check_role
+from utils.role_check_util import check_role, has_permission
 from utils.logging_util import log_debug_action
 from utils.pagination_util import apply_pagination
 from routers.schemas.brochure_schema import BrochureResponse
@@ -60,6 +60,9 @@ def create_brochure(request: Request, brochure: Brochure):
 @router.put("/{brochure_id}")
 def update_brochure(request: Request, brochure_id: int, brochure_data: dict):
     session: Session = SessionLocal()
+    admin_token = request.headers.get("x_admin_token")
+    check_role(admin_token)
+
     try:
         brochure = session.query(Brochure).filter(Brochure.id == brochure_id, Brochure.is_deleted == False).first()
         if not brochure:
@@ -100,4 +103,3 @@ def delete_brochure(request: Request, brochure_id: int):
         return error_response(str(e))
     finally:
         session.close()
-

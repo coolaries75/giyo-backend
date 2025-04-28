@@ -1,8 +1,17 @@
+from datetime import datetime
+
 def success_response(data=None, meta=None):
-    response = {"status": "success", "data": data}
-    if meta:
-        response["meta"] = meta
-    return response
+    return {
+        "status": "success",
+        "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        "data": data,
+        "meta": meta or {}
+    }
 
 def error_response(message="An error occurred", code=400):
-    return {"status": "error", "message": message, "code": code}
+    return {
+        "status": "error",
+        "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        "message": message,
+        "code": code
+    }
