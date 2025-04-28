@@ -1,4 +1,3 @@
-# We are not deleting the old logging files yet (logging_db_util.py, logging_debug_util.py).
 from fastapi import APIRouter, Request
 from typing import List
 from sqlalchemy.orm import Session
@@ -6,7 +5,7 @@ from database import SessionLocal
 from models.brochure_model import Brochure
 from utils.response_wrapper import success_response, error_response
 from utils.role_check_util import check_role
-from utils.logging_util import log_db_action, log_debug_action
+from utils.logging_util import log_debug_action
 from utils.pagination_util import apply_pagination
 from routers.schemas.brochure_schema import BrochureResponse
 from utils.auto_generate_util import generate_whatsapp_cta
@@ -51,7 +50,7 @@ def create_brochure(request: Request, brochure: Brochure):
         session.commit()
         session.refresh(brochure)
         log_debug_action(f"{admin_name} ({role}) created brochure ID {brochure.id}")
-        return success_response("Brochure created", {"id": brochure.id})
+        return success_response({"message": "Brochure created", "id": brochure.id})
     except Exception as e:
         session.rollback()
         return error_response(str(e))
@@ -68,7 +67,7 @@ def update_brochure(request: Request, brochure_id: int, brochure_data: dict):
         for key, value in brochure_data.items():
             setattr(brochure, key, value)
         session.commit()
-        return success_response("Brochure updated")
+        return success_response({"message": "Brochure updated"})
     except Exception as e:
         session.rollback()
         return error_response(str(e))
@@ -95,9 +94,10 @@ def delete_brochure(request: Request, brochure_id: int):
             log_debug_action(f"{admin_name} ({role}) soft deleted brochure {brochure_id}")
 
         session.commit()
-        return success_response("Brochure deleted")
+        return success_response({"message": "Brochure deleted"})
     except Exception as e:
         session.rollback()
         return error_response(str(e))
     finally:
         session.close()
+
