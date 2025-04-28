@@ -3,7 +3,7 @@ from typing import List
 from database import SessionLocal
 from models.service_model import Service
 from utils.response_wrapper import success_response, error_response
-from utils.role_check_util import check_role
+from utils.role_check_util import check_role, has_permission
 from utils.logging_util import log_db_action, log_debug_action
 from routers.schemas.service_schema import ServiceResponse
 from utils.auto_generate_util import generate_whatsapp_cta
@@ -48,6 +48,9 @@ def create_service(request: Request, service: Service):
 
 @router.put("/{service_id}")
 def update_service(request: Request, service_id: int, service_data: dict):
+    admin_token = request.headers.get("x_admin_token")
+    check_role(admin_token)
+
     try:
         service = db.query(Service).filter(Service.id == service_id, Service.is_deleted == False).first()
         if not service:
@@ -90,8 +93,8 @@ def hard_delete_service(request: Request, service_id: int):
     admin_token = request.headers.get("x_admin_token")
     role = check_role(admin_token)
 
-    if role != "super_admin":
-        return error_response("Unauthorized for permanent delete")
+    if not has_permission(role, "super_admin"):
+        return error_response("Unauthorized: Only super_admin can permanently delete services")
 
     try:
         service = db.query(Service).filter(Service.id == service_id).first()
