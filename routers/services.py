@@ -1,6 +1,4 @@
-import sys
-import os
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 from fastapi import APIRouter, HTTPException, Request
 from typing import List
 from database import SessionLocal
@@ -9,7 +7,7 @@ from utils.response_wrapper import success_response, error_response
 from utils.role_check_util import check_role
 from utils.logging_db_util import log_db_action
 from utils.logging_debug_util import log_debug_action
-from schemas.service_schema import ServiceResponse
+from giyo_backend.schemas.service_schema import ServiceResponse
 from utils.auto_generate_util import generate_whatsapp_cta
 
 router = APIRouter()

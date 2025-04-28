@@ -1,16 +1,14 @@
+
 from fastapi import APIRouter, Request
 from typing import List
 from sqlalchemy.orm import Session
-import sys
-import os
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from database import SessionLocal
 from models.brochure_model import Brochure
 from utils.response_wrapper import success_response, error_response
 from utils.role_check_util import check_role
 from utils.logging_debug_util import log_debug_action
 from utils.pagination_util import apply_pagination
-from schemas.brochure_schema import BrochureResponse
+from giyo_backend.schemas.brochure_schema import BrochureResponse
 from utils.auto_generate_util import generate_whatsapp_cta
 
 router = APIRouter(prefix="/api/v1/brochures", tags=["Brochures"])
