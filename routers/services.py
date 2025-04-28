@@ -1,12 +1,11 @@
-
+# We are not deleting the old logging files yet (logging_db_util.py, logging_debug_util.py).
 from fastapi import APIRouter, HTTPException, Request
 from typing import List
 from database import SessionLocal
 from models.service_model import Service
 from utils.response_wrapper import success_response, error_response
 from utils.role_check_util import check_role
-from utils.logging_db_util import log_db_action
-from utils.logging_debug_util import log_debug_action
+from utils.logging_util import log_db_action, log_debug_action
 from routers.schemas.service_schema import ServiceResponse
 from utils.auto_generate_util import generate_whatsapp_cta
 
