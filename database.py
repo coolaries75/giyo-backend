@@ -14,11 +14,19 @@ engine = create_engine(DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 
-# Import models to ensure they are registered before table creation
-from models import db_service, db_brochure
+# Import SQLAlchemy Models (register for Alembic/Future Migrations)
+from models import Brochure, Service
 
 # Initialize Database
 def init_db():
     print("🔧 Starting table creation...")
     Base.metadata.create_all(bind=engine)
     print("✅ Table creation completed for all registered models.")
+
+# Dependency for FastAPI endpoints (optional but professional)
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
