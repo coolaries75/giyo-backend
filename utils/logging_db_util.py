@@ -34,3 +34,9 @@ def log_action(user_id: int, action: str, target_type: str, target_id: int, deta
         logging.error(f"Failed to log action: {e}")
     finally:
         session.close()
+def log_db_action(message):
+    from datetime import datetime
+    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    print(f"[DB LOG] [{timestamp}] {message}")
+
+
