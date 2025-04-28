@@ -1,24 +1,17 @@
-from fastapi import APIRouter, HTTPException, Request
+from fastapi import APIRouter, Request
 from typing import List
 from sqlalchemy.orm import Session
-from pydantic import BaseModel
 from database import SessionLocal
 from models.brochure_model import Brochure
 from utils.response_wrapper import success_response, error_response
 from utils.role_check_util import check_role
 from utils.logging_debug_util import log_debug_action
 from utils.pagination_util import apply_pagination
+from schemas.brochure_schema import BrochureResponse
+from utils.auto_generate_util import generate_whatsapp_cta
 
 router = APIRouter(prefix="/api/v1/brochures", tags=["Brochures"])
 
-class BrochureResponse(BaseModel):
-    id: int
-    title: str
-    code: str
-    status: str
-    cta_link: str
-
-# --- GET Brochures with Pagination ---
 @router.get("/", response_model=List[BrochureResponse])
 def get_brochures(request: Request, page: int = 1, limit: int = 10):
     session: Session = SessionLocal()
@@ -37,7 +30,7 @@ def get_brochures(request: Request, page: int = 1, limit: int = 10):
                 title=b.title,
                 code=b.code,
                 status=status,
-                cta_link=f"https://wa.me/965XXXXXXX?text=مرحباً، أود الاستفسار عن العرض {b.code}"
+                cta_link=generate_whatsapp_cta(b.code)
             ))
         return success_response(result, meta)
     except Exception as e:
@@ -45,7 +38,6 @@ def get_brochures(request: Request, page: int = 1, limit: int = 10):
     finally:
         session.close()
 
-# --- POST Create Brochure ---
 @router.post("/", response_model=dict)
 def create_brochure(request: Request, brochure: Brochure):
     session: Session = SessionLocal()
@@ -65,7 +57,6 @@ def create_brochure(request: Request, brochure: Brochure):
     finally:
         session.close()
 
-# --- PUT Update Brochure ---
 @router.put("/{brochure_id}")
 def update_brochure(request: Request, brochure_id: int, brochure_data: dict):
     session: Session = SessionLocal()
@@ -83,7 +74,6 @@ def update_brochure(request: Request, brochure_id: int, brochure_data: dict):
     finally:
         session.close()
 
-# --- DELETE Brochure (Soft or Hard Delete) ---
 @router.delete("/{brochure_id}")
 def delete_brochure(request: Request, brochure_id: int):
     session: Session = SessionLocal()
