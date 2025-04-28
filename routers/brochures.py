@@ -1,6 +1,9 @@
 from fastapi import APIRouter, Request
 from typing import List
 from sqlalchemy.orm import Session
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from database import SessionLocal
 from models.brochure_model import Brochure
 from utils.response_wrapper import success_response, error_response
