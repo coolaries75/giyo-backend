@@ -6,17 +6,10 @@ from utils.response_wrapper import success_response, error_response
 from utils.role_check_util import check_role
 from utils.logging_db_util import log_db_action
 from utils.logging_debug_util import log_debug_action
+from schemas.service_schema import ServiceResponse
 
 router = APIRouter()
 db = SessionLocal()
-
-class ServiceResponse:
-    def __init__(self, id, name, code, status, cta_link):
-        self.id = id
-        self.name = name
-        self.code = code
-        self.status = status
-        self.cta_link = cta_link
 
 @router.get("/", response_model=List[ServiceResponse])
 def get_services(request: Request, skip: int = 0, limit: int = 10):
