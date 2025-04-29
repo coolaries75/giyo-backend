@@ -11,6 +11,7 @@ from utils.response_wrapper import success_response, error_response
 from utils.pagination_util import apply_pagination
 from typing import List
 from datetime import date
+from urllib.parse import urlencode
 
 router = APIRouter()
 
@@ -20,6 +21,16 @@ def get_db():
         yield db
     finally:
         db.close()
+
+def generate_cta_link_brochure(brochure):
+    if not brochure:
+        return ""
+    params = {
+        "brochure_id": brochure.id,
+        "brochure_title": brochure.title_ar
+    }
+    base_url = "https://yourclinic.com/brochures"  # Placeholder
+    return f"{base_url}?{urlencode(params, encoding='utf-8')}"
 
 def calculate_status(brochure):
     today = date.today()
@@ -35,12 +46,14 @@ def calculate_status(brochure):
         return "active"
 
 @router.get("/")
-
 def get_brochures(page: int = 1, limit: int = 20, db: Session = Depends(get_db)):
     brochures = db.query(BrochureDB).all()
     result = []
     for b in brochures:
         b_data = Brochure.from_orm(b).dict()
+        # Inject CTA link
+        b_data["cta_link"] = generate_cta_link_brochure(b)
+        # Inject Status
         b_data["status"] = calculate_status(b)
         result.append(b_data)
     paginated = apply_pagination(result, page, limit)

@@ -10,6 +10,8 @@ from utils.role_check_util import check_role
 from utils.response_wrapper import success_response, error_response
 from utils.pagination_util import apply_pagination
 from typing import List
+from datetime import datetime
+from urllib.parse import urlencode
 
 router = APIRouter()
 
@@ -20,10 +22,38 @@ def get_db():
     finally:
         db.close()
 
+def generate_cta_link_service(service):
+    if not service:
+        return ""
+    params = {
+        "service_id": service.id,
+        "service_title": service.title_ar
+    }
+    base_url = "https://yourclinic.com/booking"  # Placeholder
+    return f"{base_url}?{urlencode(params, encoding='utf-8')}"
+
+def calculate_status(start_date, end_date):
+    now = datetime.utcnow().date()
+    if start_date and now < start_date:
+        return "coming_soon"
+    elif start_date and end_date and start_date <= now <= end_date:
+        return "active"
+    elif end_date and now > end_date:
+        return "expired"
+    else:
+        return "active"
+
 @router.get("/")
 def get_services(page: int = 1, limit: int = 20, db: Session = Depends(get_db)):
     services = db.query(ServiceDB).filter(ServiceDB.is_active == True).all()
-    result = [Service.from_orm(s).dict() for s in services]
+    result = []
+    for s in services:
+        s_data = Service.from_orm(s).dict()
+        # Inject CTA link
+        s_data["cta_link"] = generate_cta_link_service(s)
+        # Inject Status
+        s_data["status"] = calculate_status(s.start_date, s.expiry_date)
+        result.append(s_data)
     paginated = apply_pagination(result, page, limit)
     return success_response(data=paginated, message="Services fetched successfully")
 
