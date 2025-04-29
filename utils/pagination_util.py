@@ -1,10 +1,11 @@
-def apply_pagination(query, page: int = 1, limit: int = 20):
-    total = query.count()
-    items = query.offset((page - 1) * limit).limit(limit).all()
-    meta = {
+# Pagination logic utility
+def apply_pagination(data_list, page=1, limit=20):
+    start = (page - 1) * limit
+    end = start + limit
+    paginated_data = data_list[start:end]
+    return {
         "page": page,
         "limit": limit,
-        "total_items": total,
-        "total_pages": (total + limit - 1) // limit
+        "total_items": len(data_list),
+        "items": paginated_data
     }
-    return items, meta

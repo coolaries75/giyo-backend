@@ -1,17 +1,14 @@
-from datetime import datetime
-
-def success_response(data=None, meta=None):
+# Standardized response formatting utility
+def success_response(data=None, message="Operation successful"):
     return {
         "status": "success",
-        "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
         "data": data,
-        "meta": meta or {}
+        "message": message
     }
 
 def error_response(message="An error occurred", code=400):
     return {
         "status": "error",
-        "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
         "message": message,
         "code": code
     }
