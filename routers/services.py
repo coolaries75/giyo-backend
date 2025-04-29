@@ -20,7 +20,7 @@ def get_db():
     finally:
         db.close()
 
-@router.get("/", response_model=List[Service])
+@router.get("/")
 def get_services(page: int = 1, limit: int = 20, db: Session = Depends(get_db)):
     services = db.query(ServiceDB).filter(ServiceDB.is_active == True).all()
     result = [Service.from_orm(s).dict() for s in services]
