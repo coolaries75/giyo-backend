@@ -7,8 +7,11 @@ from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
 
-# Initialize Database
-Base.metadata.create_all(bind=engine)
+@app.get("/health")
+def health_check():
+    return {"status": "ok"}
+
+# Initialize Database Base.metadata.create_all(bind=engine) was moved to setup_db.py
 
 # CORS Configuration
 app.add_middleware(
