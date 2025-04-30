@@ -55,8 +55,41 @@ def create_service(service: ServiceCreate, request: Request, x_admin_token: str 
         raise HTTPException(status_code=403, detail="Insufficient permissions")
 
     payload = service.dict()
+    if "branch_id" not in payload:
+        payload["branch_id"] = None
+    if "slug" not in payload:
+        payload["slug"] = None
     if "tags" not in payload:
         payload["tags"] = []
+
+    # Auto-generate code if not supplied
+    if "code" not in payload or not payload["code"]:
+        now = datetime.utcnow()
+        prefix = now.strftime("%m%y") + "-SER-"
+        last = db.query(ServiceDB).filter(ServiceDB.code.like(f"{prefix}%")).order_by(ServiceDB.id.desc()).first()
+        last_num = int(last.code[-3:]) if last and last.code else 0
+        new_code = f"{prefix}{last_num + 1:03d}"
+        while db.query(ServiceDB).filter(ServiceDB.code == new_code).first():
+            last_num += 1
+            new_code = f"{prefix}{last_num + 1:03d}"
+        payload["code"] = new_code
+    else:
+        if db.query(ServiceDB).filter(ServiceDB.code == payload["code"]).first():
+            raise HTTPException(status_code=409, detail=f"Service code '{payload['code']}' already exists.")
+
+    
+    role = check_role(x_admin_token)
+    admin_branch_id = int(request.headers.get("x-admin-branch", "0"))
+    if role in ["branch_admin", "post_admin"]:
+        payload["branch_id"] = admin_branch_id
+    elif role == "super_admin":
+        if not payload.get("branch_id"):
+            payload["branch_id"] = 1  # fallback default
+
+    if not payload.get("tags"):
+        payload["tags"] = [f"auto", f"branch-{payload['branch_id']}"]
+    payload["tags"] = list(dict.fromkeys([t.lower() for t in payload["tags"]]))  # deduplicate and normalize
+
     db_service = ServiceDB(**payload)
     db.add(db_service)
     db.commit()
@@ -78,6 +111,12 @@ def update_service(service_id: int, service: ServiceUpdate, request: Request, x_
     if not db_service:
         return error_response(message="Service not found", code=404)
     updates = service.dict(exclude_unset=True)
+    if "branch_id" not in updates:
+        updates["branch_id"] = db_service.branch_id
+    if "code" not in updates:
+        updates["code"] = db_service.code
+    if "slug" not in updates:
+        updates["slug"] = db_service.slug
     if "tags" not in updates:
         updates["tags"] = db_service.tags or []
     for key, value in updates.items():

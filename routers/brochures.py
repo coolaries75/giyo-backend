@@ -65,7 +65,44 @@ def create_brochure(brochure: BrochureCreate, request: Request, x_admin_token: s
     if role not in ["super_admin", "post_admin"]:
         raise HTTPException(status_code=403, detail="Insufficient permissions")
 
-    db_brochure = BrochureDB(**brochure.dict())
+    payload = brochure.dict()
+    if "tags" not in payload:
+        payload["tags"] = []
+
+    if "price" not in payload:
+        payload["price"] = None
+    if "slug" not in payload:
+        payload["slug"] = None
+
+    # Code logic
+    if "code" not in payload or not payload["code"]:
+        now = datetime.utcnow()
+        prefix = now.strftime("%m%y") + "-BUN-"
+        last = db.query(BrochureDB).filter(BrochureDB.code.like(f"{prefix}%")).order_by(BrochureDB.id.desc()).first()
+        last_num = int(last.code[-3:]) if last and last.code else 0
+        new_code = f"{prefix}{last_num + 1:03d}"
+        while db.query(BrochureDB).filter(BrochureDB.code == new_code).first():
+            last_num += 1
+            new_code = f"{prefix}{last_num + 1:03d}"
+        payload["code"] = new_code
+    else:
+        if db.query(BrochureDB).filter(BrochureDB.code == payload["code"]).first():
+            raise HTTPException(status_code=409, detail=f"Brochure code '{payload['code']}' already exists.")
+
+    
+    role = check_role(x_admin_token)
+    admin_branch_id = int(request.headers.get("x-admin-branch", "0"))
+    if role in ["branch_admin", "post_admin"]:
+        payload["branch_id"] = admin_branch_id
+    elif role == "super_admin":
+        if not payload.get("branch_id"):
+            payload["branch_id"] = 1  # fallback default
+
+    if not payload.get("tags"):
+        payload["tags"] = [f"auto", f"branch-{payload['branch_id']}"]
+    payload["tags"] = list(dict.fromkeys([t.lower() for t in payload["tags"]]))  # deduplicate and normalize
+
+    db_brochure = BrochureDB(**payload)
     db.add(db_brochure)
     db.commit()
     db.refresh(db_brochure)
@@ -85,7 +122,10 @@ def update_brochure(brochure_id: int, brochure: BrochureUpdate, request: Request
     db_brochure = db.query(BrochureDB).filter(BrochureDB.id == brochure_id).first()
     if not db_brochure:
         return error_response(message="Brochure not found", code=404)
-    for key, value in brochure.dict(exclude_unset=True).items():
+    updates = brochure.dict(exclude_unset=True)
+    if "tags" not in updates:
+        updates["tags"] = db_brochure.tags or []
+    for key, value in updates.items():
         setattr(db_brochure, key, value)
     db.commit()
     db.refresh(db_brochure)
@@ -128,6 +168,41 @@ def hard_delete_brochure(brochure_id: int, x_admin_token: str = Header(...), db:
     db.commit()
 
     return success_response(message="Brochure permanently deleted")
+
+
+@router.post("/{brochure_id}/duplicate", response_model=Brochure)
+def duplicate_brochure(brochure_id: int, overrides: BrochureUpdate, request: Request, x_admin_token: str = Header(...), db: Session = Depends(get_db)):
+    role = check_role(x_admin_token)
+    if role not in ["super_admin", "post_admin"]:
+        raise HTTPException(status_code=403, detail="Insufficient permissions")
+
+    original = db.query(BrochureDB).filter(BrochureDB.id == brochure_id, BrochureDB.is_active == True).first()
+    if not original:
+        return error_response(message="Original brochure not found", code=404)
+
+    original_data = {
+        "title_ar": original.title_ar,
+        "description_ar": original.description_ar,
+        "start_date": original.start_date,
+        "expiry_date": original.expiry_date,
+        "infinite": original.infinite,
+        "branch_id": original.branch_id,
+        "tags": original.tags or []
+    }
+    override_data = overrides.dict(exclude_unset=True)
+    combined_data = {**original_data, **override_data}
+
+    duplicated = BrochureDB(**combined_data)
+    db.add(duplicated)
+    db.commit()
+    db.refresh(duplicated)
+
+    admin_user = request.headers.get("x-admin-name", "unknown")
+    log_db_action(db, admin_user, role, "Duplicate", "Brochure", duplicated.id)
+    log_debug_action(admin_user, "Duplicate", "Brochure", duplicated.id)
+
+    return success_response(data=Brochure.from_orm(duplicated).dict(), message="Brochure duplicated successfully")
+
 
 # TODO: Migrate role-checking to JWT/OAuth in future versions.
 # TODO: Implement multilingual responses in future versions.
