@@ -54,7 +54,10 @@ def create_service(service: ServiceCreate, request: Request, x_admin_token: str 
     if role not in ["super_admin", "post_admin"]:
         raise HTTPException(status_code=403, detail="Insufficient permissions")
 
-    db_service = ServiceDB(**service.dict())
+    payload = service.dict()
+    if "tags" not in payload:
+        payload["tags"] = []
+    db_service = ServiceDB(**payload)
     db.add(db_service)
     db.commit()
     db.refresh(db_service)
@@ -74,7 +77,10 @@ def update_service(service_id: int, service: ServiceUpdate, request: Request, x_
     db_service = db.query(ServiceDB).filter(ServiceDB.id == service_id, ServiceDB.is_active == True).first()
     if not db_service:
         return error_response(message="Service not found", code=404)
-    for key, value in service.dict(exclude_unset=True).items():
+    updates = service.dict(exclude_unset=True)
+    if "tags" not in updates:
+        updates["tags"] = db_service.tags or []
+    for key, value in updates.items():
         setattr(db_service, key, value)
     db.commit()
     db.refresh(db_service)
@@ -117,6 +123,39 @@ def hard_delete_service(service_id: int, x_admin_token: str = Header(...), db: S
     db.commit()
 
     return success_response(message="Service permanently deleted")
+
+
+@router.post("/{service_id}/duplicate", response_model=Service)
+def duplicate_service(service_id: int, overrides: ServiceUpdate, request: Request, x_admin_token: str = Header(...), db: Session = Depends(get_db)):
+    role = check_role(x_admin_token)
+    if role not in ["super_admin", "post_admin"]:
+        raise HTTPException(status_code=403, detail="Insufficient permissions")
+
+    original = db.query(ServiceDB).filter(ServiceDB.id == service_id, ServiceDB.is_active == True).first()
+    if not original:
+        return error_response(message="Original service not found", code=404)
+
+    # Create payload based on original, with override fields applied
+    original_data = {
+        "name": original.name,
+        "description": original.description,
+        "price": original.price,
+        "tags": original.tags or []
+    }
+    override_data = overrides.dict(exclude_unset=True)
+    combined_data = {**original_data, **override_data}
+
+    duplicated = ServiceDB(**combined_data)
+    db.add(duplicated)
+    db.commit()
+    db.refresh(duplicated)
+
+    admin_user = request.headers.get("x-admin-name", "unknown")
+    log_db_action(db, admin_user, role, "Duplicate", "Service", duplicated.id)
+    log_debug_action(admin_user, "Duplicate", "Service", duplicated.id)
+
+    return success_response(data=Service.from_orm(duplicated).dict(), message="Service duplicated successfully")
+
 
 # TODO: Migrate role-checking to JWT/OAuth in future versions.
 # TODO: Implement multilingual responses in future versions.
