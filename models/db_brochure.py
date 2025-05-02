@@ -17,3 +17,4 @@ class BrochureDB(Base):
     infinite = Column(Boolean, default=False)
     is_active = Column(Boolean, default=True)
     tags = Column(ARRAY(String), nullable=True, default=[])
+    price = Column(Numeric, nullable=True)  # ✅ Newly added
