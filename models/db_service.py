@@ -1,7 +1,10 @@
+from sqlalchemy import PickleType
+from sqlalchemy.ext.mutable import MutableList
 from sqlalchemy import Column, Integer, String, Numeric, Boolean
 from database import Base
 
 class ServiceDB(Base):
+    tags = Column(MutableList.as_mutable(PickleType), default=list)
     __tablename__ = "services"
 
     id = Column(Integer, primary_key=True, index=True)

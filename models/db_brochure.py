@@ -1,8 +1,11 @@
+from sqlalchemy import PickleType
+from sqlalchemy.ext.mutable import MutableList
 
 from sqlalchemy import Column, Integer, String, Boolean, Date
 from database import Base
 
 class BrochureDB(Base):
+    tags = Column(MutableList.as_mutable(PickleType), default=list)
     __tablename__ = "brochures"
 
     id = Column(Integer, primary_key=True, index=True)
