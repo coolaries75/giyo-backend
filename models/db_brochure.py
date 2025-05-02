@@ -13,8 +13,8 @@ class BrochureDB(Base):
     slug = Column(String, unique=True)
     image_url = Column(String)
     start_date = Column(Date, nullable=True)
-    expiry_date = Column(Date, nullable=True)
     price = Column(Numeric, nullable=True)  # 🔁 moved higher
+    expiry_date = Column(Date, nullable=True)
     infinite = Column(Boolean, default=False)
     is_active = Column(Boolean, default=True)
     tags = Column(ARRAY(String), nullable=True, default=[])
