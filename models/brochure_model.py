@@ -6,10 +6,10 @@ from datetime import date
 class BrochureBase(BaseModel):
     title: str
     description: Optional[str] = None
-    code: str
+    code: Optional[str] = None
     slug: Optional[str] = None
     image_url: Optional[str] = None
-    branch_id: int
+    branch_id: Optional[int] = None
     start_date: Optional[date] = None
     expiry_date: Optional[date] = None
     infinite: bool = False

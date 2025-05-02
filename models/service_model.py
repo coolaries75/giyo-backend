@@ -6,10 +6,10 @@ class ServiceBase(BaseModel):
     name: str
     description: Optional[str] = None
     price: float
-    code: str
+    code: Optional[str] = None
     slug: Optional[str] = None
     image_url: Optional[str] = None
-    branch_id: int
+    branch_id: Optional[int] = None
 
 class ServiceCreate(ServiceBase):
     pass
