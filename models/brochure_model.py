@@ -4,6 +4,7 @@ from typing import Optional
 from datetime import date
 
 class BrochureBase(BaseModel):
+    tags: Optional[List[str]] = []
     title: str
     description: Optional[str] = None
     code: Optional[str] = None
