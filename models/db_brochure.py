@@ -1,11 +1,8 @@
-from sqlalchemy import PickleType
-from sqlalchemy.ext.mutable import MutableList
-
+from sqlalchemy.dialects.postgresql import ARRAY
 from sqlalchemy import Column, Integer, String, Boolean, Date
 from database import Base
 
 class BrochureDB(Base):
-    tags = Column(MutableList.as_mutable(PickleType), default=list)
     __tablename__ = "brochures"
 
     id = Column(Integer, primary_key=True, index=True)
@@ -19,3 +16,4 @@ class BrochureDB(Base):
     expiry_date = Column(Date, nullable=True)
     infinite = Column(Boolean, default=False)
     is_active = Column(Boolean, default=True)
+    tags = Column(ARRAY(String), nullable=True, default=[])
