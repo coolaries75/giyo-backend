@@ -7,11 +7,12 @@ from pydantic import BaseModel, Field
 from typing import List, Optional
 from datetime import date
 
+router = APIRouter(tags=["brochures"])
+
+# ✅ Response model to fix FastAPI 500 validation error
 class BrochureResponse(BaseModel):
     success: bool
     id: int
-
-router = APIRouter(tags=["brochures"])
 
 # Pydantic input model
 class BrochureCreate(BaseModel):
@@ -28,7 +29,8 @@ class BrochureCreate(BaseModel):
     price: Optional[float] = None
     status: Optional[str] = "active"
 
-@router.post("/")
+# ✅ Use response_model to enforce return structure
+@router.post("/", response_model=BrochureResponse)
 def create_brochure(req: Request, brochure: BrochureCreate, db: Session = Depends(get_db)):
     branch_id = req.headers.get("x-admin-branch")
     if not branch_id:
@@ -46,7 +48,8 @@ def create_brochure(req: Request, brochure: BrochureCreate, db: Session = Depend
         infinite=brochure.infinite,
         is_active=brochure.is_active,
         tags=brochure.tags,
-        price=brochure.price
+        price=brochure.price,
+        status=brochure.status
     )
 
     db.add(new_brochure)
