@@ -1,3 +1,4 @@
+# Touch comment to trigger redeploy - 2025-05-03 19:06:54
 # FastAPI main app with API versioning and CORS setup
 from fastapi import FastAPI
 from database import engine, Base
