@@ -13,6 +13,7 @@ from utils.response_wrapper import success_response, error_response
 from utils.pagination_util import apply_pagination
 from typing import List
 from urllib.parse import urlencode
+from typing import Optional
 
 router = APIRouter()
 
