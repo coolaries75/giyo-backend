@@ -4,6 +4,10 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.orm import Session
 # from database import SessionLocal
+from dotenv import load_dotenv
+load_dotenv()
+
+
 
 def get_db():
     db = SessionLocal()

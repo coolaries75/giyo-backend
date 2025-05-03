@@ -11,7 +11,7 @@ class BrochureResponse(BaseModel):
     success: bool
     id: int
 
-router = APIRouter(prefix="/api/v1/brochures", tags=["brochures"])
+router = APIRouter(tags=["brochures"])
 
 # Pydantic input model
 class BrochureCreate(BaseModel):
