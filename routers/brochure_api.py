@@ -7,6 +7,10 @@ from pydantic import BaseModel, Field
 from typing import List, Optional
 from datetime import date
 
+class BrochureResponse(BaseModel):
+    success: bool
+    id: int
+
 router = APIRouter(prefix="/api/v1/brochures", tags=["brochures"])
 
 # Pydantic input model
