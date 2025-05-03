@@ -1,4 +1,6 @@
 # brochure_api.py
+if __name__ == "__main__":
+    exit("Disabled crash route from running on deploy")
 from fastapi import APIRouter, HTTPException, Request, Depends
 from sqlalchemy.orm import Session
 from database import get_db
