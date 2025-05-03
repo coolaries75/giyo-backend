@@ -1,5 +1,5 @@
 # brochure_api.py
-from fastapi import APIRouter, HTTPException, Request
+from fastapi import APIRouter, HTTPException, Request, Depends
 from sqlalchemy.orm import Session
 from database import get_db
 from models.db_brochure import BrochureDB
@@ -29,7 +29,7 @@ class BrochureCreate(BaseModel):
     status: Optional[str] = "active"
 
 @router.post("/")
-def create_brochure(req: Request, brochure: BrochureCreate, db: Session = get_db()):
+def create_brochure(req: Request, brochure: BrochureCreate, db: Session = Depends(get_db)):
     branch_id = req.headers.get("x-admin-branch")
     if not branch_id:
         raise HTTPException(status_code=400, detail="Missing branch ID header")
