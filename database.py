@@ -2,6 +2,15 @@ import os
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import Session
+from database import SessionLocal
+
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
 
 # Database URL from environment variables
 DATABASE_URL = os.getenv("DATABASE_URL")
