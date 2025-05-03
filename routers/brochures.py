@@ -46,9 +46,6 @@ def calculate_status(brochure):
     else:
         return "active"
 
-@router.get("/")
-def get_brochures(page: int = 1, limit: int = 20, db: Session = Depends(get_db)):
-    brochures = db.query(BrochureDB).all()
     result = []
     for b in brochures:
         b_data = Brochure.from_orm(b).dict()
@@ -207,3 +204,26 @@ def duplicate_brochure(brochure_id: int, overrides: BrochureUpdate, request: Req
 
 # TODO: Migrate role-checking to JWT/OAuth in future versions.
 # TODO: Implement multilingual responses in future versions.
+
+@router.get("/", response_model=List[Brochure])
+def get_brochures(
+    page: int = 1,
+    limit: int = 20,
+    branch_id: Optional[int] = None,
+    status: Optional[str] = None,
+    db: Session = Depends(get_db)
+):
+    query = db.query(BrochureDB)
+    if branch_id:
+        query = query.filter(BrochureDB.branch_id == branch_id)
+    brochures = query.all()
+    result = []
+    for b in brochures:
+        b_data = Brochure.from_orm(b).dict()
+        b_data["cta_link"] = generate_cta_link_brochure(b)
+        b_data["status"] = calculate_brochure_status(b.start_date, b.expiry_date, b.is_active)
+        if status and b_data["status"] != status:
+            continue
+        result.append(b_data)
+    paginated = apply_pagination(result, page, limit)
+    return success_response(data=paginated, message="Brochures fetched successfully")
