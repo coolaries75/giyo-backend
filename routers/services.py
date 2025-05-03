@@ -1,3 +1,4 @@
+from utils_cta_status import generate_cta_link_service, calculate_service_status
 # Services router with pagination and response wrapper
 from datetime import datetime
 from fastapi import APIRouter, Depends, HTTPException, Request, Header
@@ -35,7 +36,6 @@ def generate_cta_link_service(service):
 def calculate_service_status(service):
     return "active" if service.is_active else "archived"
 
-@router.get("/")
 def get_services(page: int = 1, limit: int = 20, db: Session = Depends(get_db)):
     services = db.query(ServiceDB).filter(ServiceDB.is_active == True).all()
     result = []
@@ -199,3 +199,26 @@ def duplicate_service(service_id: int, overrides: ServiceUpdate, request: Reques
 
 # TODO: Migrate role-checking to JWT/OAuth in future versions.
 # TODO: Implement multilingual responses in future versions.
+
+@router.get("/", response_model=List[Service])
+def get_services(
+    page: int = 1,
+    limit: int = 20,
+    branch_id: Optional[int] = None,
+    status: Optional[str] = None,
+    db: Session = Depends(get_db)
+):
+    query = db.query(ServiceDB)
+    if branch_id:
+        query = query.filter(ServiceDB.branch_id == branch_id)
+    services = query.all()
+    result = []
+    for s in services:
+        s_data = Service.from_orm(s).dict()
+        s_data["cta_link"] = generate_cta_link_service(s)
+        s_data["status"] = calculate_service_status(s)
+        if status and s_data["status"] != status:
+            continue
+        result.append(s_data)
+    paginated = apply_pagination(result, page, limit)
+    return success_response(data=paginated, message="Services fetched successfully")
