@@ -2,7 +2,7 @@
 # FastAPI main app with API versioning and CORS setup
 from fastapi import FastAPI
 from database import engine, Base
-from routers import services, brochures, info
+from routers import services, brochure_api, info
 from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
@@ -24,7 +24,7 @@ app.add_middleware(
 
 # Include Routers with API Versioning
 app.include_router(services.router, prefix="/api/v1/services", tags=["Services"])
-app.include_router(brochures.router, prefix="/api/v1/brochures", tags=["Brochures"])
+app.include_router(brochure_api.router, prefix="/api/v1/brochures", tags=["Brochures"])
 app.include_router(info.router, prefix="/api/v1", tags=["Info"])
 
 @app.get("/")
