@@ -1,5 +1,7 @@
 # utils_cta_status.py
 
+from urllib.parse import quote
+
 def generate_cta_link_service(service):
     return f"/book/{service.slug}" if getattr(service, "slug", None) else None
 
@@ -8,20 +10,18 @@ def calculate_service_status(service):
         return "active"
     return "inactive"
 
-# --- Injected Brochure CTA Generator ---
-
-def generate_whatsapp_cta_link_ar(phone_number, items, item_type="item"):
-    if not phone_number or not items:
+def generate_whatsapp_cta_link_ar(phone_number, title, item_type="item"):
+    """
+    Generate a WhatsApp CTA link with Unicode-safe, emoji-safe, and Arabic/RTL-safe formatting.
+    Includes a fallback if title is missing.
+    """
+    if not phone_number:
         return None
-    if isinstance(items, dict):
-        items = [items]
-    intro = f"📍 {item_type.capitalize()} للتواصل"
-    lines = [f"{intro}:"]
-    for i in items:
-        label = i.get("name") or i.get("title") or "بدون اسم"
-        code = i.get("code") or "-"
-        lines.append(f"- {label} ({code})")
-    lines.append("📲 أرسل لنا لحجز الموعد")
-    message = "\n".join(lines)
-    base_url = f"https://wa.me/{phone_number}"
-    return f"{base_url}?text=" + message.replace(" ", "%20").replace("\n", "%0A")
+
+    if title:
+        message = f"{title} - Giyo Clinic"
+    else:
+        message = f"{phone_number} - Giyo Clinic"
+
+    encoded_message = quote(message)
+    return f"https://wa.me/{phone_number}?text={encoded_message}"
