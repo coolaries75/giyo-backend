@@ -1,4 +1,4 @@
-from utils_cta_status import generate_cta_link_service, calculate_service_status
+from utils.utils_cta_status import generate_cta_link_service, calculate_service_status
 # Services router with pagination and response wrapper
 from datetime import datetime
 from fastapi import APIRouter, Depends, HTTPException, Request, Header
