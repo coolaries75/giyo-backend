@@ -2,7 +2,7 @@ from sqlalchemy.dialects.postgresql import ARRAY
 from sqlalchemy import Column, Integer, String, Boolean, Date, Numeric
 from database import Base
 
-class BrochureDB(Base):
+class Brochure(Base):
     __tablename__ = "brochures"
 
     id = Column(Integer, primary_key=True, index=True)
@@ -18,3 +18,4 @@ class BrochureDB(Base):
     infinite = Column(Boolean, default=False)
     is_active = Column(Boolean, default=True)
     tags = Column(ARRAY(String), nullable=True, default=[])
+
