@@ -4,6 +4,7 @@ from fastapi import FastAPI
 from database import engine, Base
 from routers import services, brochure_api, info
 from fastapi.middleware.cors import CORSMiddleware
+from routers import marketing_items
 
 app = FastAPI()
 
@@ -26,6 +27,8 @@ app.add_middleware(
 app.include_router(services.router, prefix="/api/v1/services", tags=["Services"])
 app.include_router(brochure_api.router, prefix="/api/v1/brochures", tags=["Brochures"])
 app.include_router(info.router, prefix="/api/v1", tags=["Info"])
+app.include_router(marketing_items.router, prefix="/api/v1/marketing-items", tags=["Marketing Items"])
+
 
 @app.get("/")
 def read_root():
