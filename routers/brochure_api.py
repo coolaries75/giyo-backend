@@ -67,13 +67,6 @@ from datetime import date
 
 router = APIRouter(tags=["Brochures"])
 
-):
-    required_fields = ["name", "code", "cta_phone"]
-    for field in required_fields:
-        if field not in brochure:
-            raise HTTPException(status_code=400, detail=f"Missing required field: {field}")
-
-    new_brochure = Brochure(**brochure)
 
     # ✅ Inject branch_id if sent via header
     if x_admin_branch is not None:
