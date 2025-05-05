@@ -9,7 +9,7 @@ router = APIRouter(tags=["Brochures"])
 
 @router.post("/")
 async def create_brochure(
-    name: str = Form(...),
+    title: str = Form(...),
     description: str = Form(...),
     category: str = Form(...),
     price: float = Form(...),
@@ -25,7 +25,7 @@ async def create_brochure(
     x_admin_branch: int = Header(default=None)
 ):
     brochure_data = {
-        "name": name,
+        "title": title,
         "description": description,
         "category": category,
         "price": price,
