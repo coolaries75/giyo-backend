@@ -46,7 +46,7 @@ async def create_brochure(
 
     new_brochure.cta_link = generate_whatsapp_cta_link_ar(
         phone_number=cta_phone,
-        items=[{"name": name, "code": code}],
+        items=[{"name": brochure.title, "code": brochure.code}],
         item_type="brochure"
     )
 
