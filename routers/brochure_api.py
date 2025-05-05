@@ -31,7 +31,7 @@ async def create_brochure(
         "price": price,
         "slug": slug,
         "start_date": start_date,
-        "end_date": end_date,
+        "expiry_date": end_date,
         "cta_override": cta_override,
         "code": code,
         "status": status,
