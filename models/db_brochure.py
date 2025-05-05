@@ -23,3 +23,5 @@ class Brochure(Base):
     cta_link = Column(String)
     status = Column(String, default="active")
 
+
+# Touch commit for redeploy
