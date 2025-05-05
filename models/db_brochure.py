@@ -1,5 +1,5 @@
 from sqlalchemy.dialects.postgresql import ARRAY
-from sqlalchemy import Column, Integer, String, Boolean, Date, Numeric
+from sqlalchemy import Column, Integer, String, Boolean, Date, Numeric, Text
 from database import Base
 
 class Brochure(Base):
