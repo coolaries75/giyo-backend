@@ -1,4 +1,4 @@
-# Touch comment to trigger redeploy - 2025-05-03 19:06:54
+# Touch trigger for redeploy - 2025-05-05 23:59
 # FastAPI main app with API versioning and CORS setup
 
 from fastapi import FastAPI
@@ -10,10 +10,8 @@ from routers import services, brochure_api, info, marketing_items
 
 app = FastAPI()
 
-# Mount static folder for image hosting
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
-# Health check endpoint
 @app.get("/health")
 def health_check():
     return {"status": "ok"}
@@ -36,7 +34,6 @@ app.include_router(brochure_api.router, prefix="/api/v1/brochures", tags=["Broch
 app.include_router(info.router, prefix="/api/v1", tags=["Info"])
 app.include_router(marketing_items.router, prefix="/api/v1/marketing-items", tags=["Marketing Items"])
 
-# Root endpoint
 @app.get("/")
 def read_root():
     return {"message": "Welcome to Giyo Backend API. Use /api/v1/ for endpoints."}
