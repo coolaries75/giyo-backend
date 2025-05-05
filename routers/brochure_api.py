@@ -30,13 +30,18 @@ async def create_brochure(
     x_admin_branch: int = Header(default=None)
 ):
     try:
+        # 🚨 Ensure x-admin-branch is present
+        if x_admin_branch is None:
+            raise HTTPException(status_code=400, detail="Missing x-admin-branch header")
+
+        # ✅ Parse dates
         start_date_parsed = datetime.strptime(start_date, "%Y-%m-%d").date() if start_date else None
         end_date_parsed = datetime.strptime(end_date, "%Y-%m-%d").date() if end_date else None
 
         # ✅ Save image with unique filename
         ext = os.path.splitext(image.filename)[-1]
         unique_filename = f"{uuid4().hex}{ext}"
-        # Ensure the target directory exists at runtime (for Railway or fresh deploys)
+        # Ensure the target directory exists at runtime
         os.makedirs("static/brochures", exist_ok=True)
         save_path = f"static/brochures/{unique_filename}"
         with open(save_path, "wb") as buffer:
@@ -54,14 +59,13 @@ async def create_brochure(
             "code": code,
             "status": status,
             "cta_phone": cta_phone,
-            "image_url": f"/static/brochures/{unique_filename}"
+            "image_url": f"/static/brochures/{unique_filename}",
+            "branch_id": x_admin_branch
         }
 
         new_brochure = Brochure(**brochure_data)
 
-        if x_admin_branch is not None:
-            new_brochure.branch_id = x_admin_branch
-
+        # ✅ Date-based status override
         today = date.today()
         if start_date_parsed and start_date_parsed > today:
             new_brochure.status = "coming_soon"
@@ -74,6 +78,7 @@ async def create_brochure(
         db.commit()
         db.refresh(new_brochure)
 
+        # ✅ Generate CTA link
         new_brochure.cta_link = generate_whatsapp_cta_link_ar(
             phone_number=cta_phone,
             items=[{"name": new_brochure.title, "code": new_brochure.code}],
@@ -192,5 +197,3 @@ def duplicate_brochure(brochure_id: UUID, db: Session = Depends(get_db)):
     db.refresh(duplicated)
 
     return {"success": True, "id": duplicated.id, "message": "Brochure duplicated"}
-
-#   T o u c h   t o   t r i g g e r   R a i l w a y   r e d e p l o y
