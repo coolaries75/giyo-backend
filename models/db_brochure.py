@@ -17,5 +17,10 @@ class Brochure(Base):
     price = Column(Numeric, nullable=True)  # 🔁 moved higher
     expiry_date = Column(Date, nullable=True)
     infinite = Column(Boolean, default=False)
-    tags = Column(ARRAY(String), nullable=True, default=[])
+    tags = Column(ARRAY(Text), default=[])
+cta_phone = Column(String)
+cta_override = Column(String, nullable=True)
+cta_link = Column(String)
+status = Column(String, default="active")
+
 
