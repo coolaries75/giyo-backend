@@ -1,9 +1,14 @@
+            import os
+from uuid import uuid4
 from fastapi import APIRouter, Depends, HTTPException, Header, Form, File, UploadFile
 from sqlalchemy.orm import Session
 from models.db_brochure import Brochure
 from database import get_db
 from utils.utils_cta_status import generate_whatsapp_cta_link_ar
-from datetime import date
+from datetime import date, datetime
+from uuid import UUID
+from typing import Optional, List
+from copy import deepcopy
 
 router = APIRouter(tags=["Brochures"])
 
@@ -24,77 +29,72 @@ async def create_brochure(
     db: Session = Depends(get_db),
     x_admin_branch: int = Header(default=None)
 ):
-    brochure_data = {
-        "title": title,
-        "description": description,
-        "category": category,
-        "price": price,
-        "slug": slug,
-        "start_date": start_date,
-        "expiry_date": end_date,
-        "cta_override": cta_override,
-        "code": code,
-        "status": status,
-        "cta_phone": cta_phone,
-        "image_url": image.filename
-    }
+    try:
+        # Convert date strings to datetime.date objects
+        start_date_parsed = datetime.strptime(start_date, "%Y-%m-%d").date() if start_date else None
+        end_date_parsed = datetime.strptime(end_date, "%Y-%m-%d").date() if end_date else None
 
-    new_brochure = Brochure(**brochure_data)
+        brochure_data = {
+            "title": title,
+            "description": description,
+            "category": category,
+            "price": price,
+            "slug": slug,
+            "start_date": start_date_parsed,
+            "expiry_date": end_date_parsed,
+            "cta_override": cta_override,
+            "code": code,
+            "status": status,
+            "cta_phone": cta_phone,
 
-    if x_admin_branch is not None:
-        new_brochure.branch_id = x_admin_branch
+# Generate unique filename
+ext = os.path.splitext(image.filename)[-1]
+unique_filename = f"{uuid4().hex}{ext}"
+save_path = f"static/brochures/{unique_filename}"
 
-    new_brochure.cta_link = generate_whatsapp_cta_link_ar(
-        phone_number=cta_phone,
-        items=[{"name": brochure.title, "code": brochure.code}],
-        item_type="brochure"
-    )
+# Save file to disk
+with open(save_path, "wb") as buffer:
+    buffer.write(await image.read())
 
-    today = date.today()
-    if start_date and start_date > str(today):
-        new_brochure.status = "coming_soon"
-    elif end_date and end_date < str(today):
-        new_brochure.status = "expired"
-    else:
-        new_brochure.status = status
+# Store relative URL path in database
+"image_url": f"/static/brochures/{unique_filename}"
 
-    db.add(new_brochure)
-    db.commit()
-    db.refresh(new_brochure)
-    return {"success": True, "id": new_brochure.id, "cta_link": new_brochure.cta_link}
+        }
 
-    new_brochure = Brochure(**brochure)
+        new_brochure = Brochure(**brochure_data)
 
-    # ✅ Inject branch_id if sent via header
-    if x_admin_branch is not None:
-        new_brochure.branch_id = x_admin_branch
+        if x_admin_branch is not None:
+            new_brochure.branch_id = x_admin_branch
 
-    # ✅ CTA logic
-    new_brochure.cta_link = generate_whatsapp_cta_link_ar(
-        phone_number=brochure["cta_phone"],
-        items=[{"name": brochure["name"], "code": brochure["code"]}],
-        item_type="brochure"
-    )
+        today = date.today()
+        if start_date_parsed and start_date_parsed > today:
+            new_brochure.status = "coming_soon"
+        elif end_date_parsed and end_date_parsed < today:
+            new_brochure.status = "expired"
+        else:
+            new_brochure.status = status
 
-    # ✅ Status logic based on dates
-    today = date.today()
-    if brochure.get("start_date") and brochure["start_date"] > today:
-        new_brochure.status = "coming_soon"
-    elif brochure.get("end_date") and brochure["end_date"] < today:
-        new_brochure.status = "expired"
-    else:
-        new_brochure.status = brochure.get("status", "active")
+        db.add(new_brochure)
+        db.commit()
+        db.refresh(new_brochure)
 
-    db.add(new_brochure)
-    db.commit()
-    db.refresh(new_brochure)
-    return {"success": True, "id": new_brochure.id, "cta_link": new_brochure.cta_link}
+        # CTA logic (after refresh)
+        new_brochure.cta_link = generate_whatsapp_cta_link_ar(
+            phone_number=cta_phone,
+            items=[{"name": new_brochure.title, "code": new_brochure.code}],
+            item_type="brochure"
+        )
 
-# --- Injected GET endpoints ---
+        db.commit()
+        db.refresh(new_brochure)
 
-from typing import Optional, List
-from uuid import UUID
+        return {"success": True, "id": new_brochure.id, "cta_link": new_brochure.cta_link}
 
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Error creating brochure: {str(e)}")
+
+# ---------- GET Brochures ----------
 @router.get("/", response_model=List[dict])
 def get_brochures(
     branch_id: Optional[int] = None,
@@ -103,7 +103,6 @@ def get_brochures(
 ):
     query = db.query(Brochure).filter(Brochure.is_deleted == False)
 
-    # Respect super admin override or fallback to branch header
     if branch_id:
         query = query.filter(Brochure.branch_id == branch_id)
     elif x_admin_branch:
@@ -112,6 +111,7 @@ def get_brochures(
     results = query.order_by(Brochure.created_at.desc()).all()
     return [b.to_dict() for b in results]
 
+# ---------- GET One Brochure ----------
 @router.get("/{brochure_id}", response_model=dict)
 def get_brochure(brochure_id: UUID, db: Session = Depends(get_db)):
     brochure = db.query(Brochure).filter(Brochure.id == brochure_id, Brochure.is_deleted == False).first()
@@ -119,8 +119,7 @@ def get_brochure(brochure_id: UUID, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Brochure not found")
     return brochure.to_dict()
 
-# --- Injected PUT endpoint ---
-
+# ---------- PUT Update ----------
 @router.put("/{brochure_id}")
 def update_brochure(
     brochure_id: UUID,
@@ -131,24 +130,23 @@ def update_brochure(
     if not brochure:
         raise HTTPException(status_code=404, detail="Brochure not found")
 
-    # Update fields from input
     for key, value in brochure_update.items():
         setattr(brochure, key, value)
 
-    # CTA logic re-evaluation
-    if "name" in brochure_update or "cta_phone" in brochure_update:
-        if getattr(brochure, "name", None) and getattr(brochure, "cta_phone", None):
+    # Regenerate CTA link if name or cta_phone updated
+    if "title" in brochure_update or "cta_phone" in brochure_update:
+        if getattr(brochure, "title", None) and getattr(brochure, "cta_phone", None):
             brochure.cta_link = generate_whatsapp_cta_link_ar(
                 phone_number=brochure.cta_phone,
-                items=[{"name": brochure.name, "code": brochure.code}],
+                items=[{"name": brochure.title, "code": brochure.code}],
                 item_type="brochure"
             )
 
-    # Status recalculation
+    # Recalculate status
     today = date.today()
     if getattr(brochure, "start_date", None) and brochure.start_date > today:
         brochure.status = "coming_soon"
-    elif getattr(brochure, "end_date", None) and brochure.end_date < today:
+    elif getattr(brochure, "expiry_date", None) and brochure.expiry_date < today:
         brochure.status = "expired"
     else:
         brochure.status = brochure_update.get("status", brochure.status)
@@ -157,8 +155,7 @@ def update_brochure(
     db.refresh(brochure)
     return {"success": True, "id": brochure.id, "cta_link": brochure.cta_link}
 
-# --- Injected DELETE / RESTORE / ARCHIVE / DUPLICATE endpoints ---
-
+# ---------- DELETE / RESTORE / ARCHIVE ----------
 @router.delete("/{brochure_id}")
 def delete_brochure(brochure_id: UUID, db: Session = Depends(get_db)):
     brochure = db.query(Brochure).filter(Brochure.id == brochure_id, Brochure.is_deleted == False).first()
@@ -186,24 +183,22 @@ def archive_brochure(brochure_id: UUID, db: Session = Depends(get_db)):
     db.commit()
     return {"success": True, "message": "Brochure archived."}
 
+# ---------- DUPLICATE ----------
 @router.post("/{brochure_id}/duplicate")
 def duplicate_brochure(brochure_id: UUID, db: Session = Depends(get_db)):
     original = db.query(Brochure).filter(Brochure.id == brochure_id, Brochure.is_deleted == False).first()
     if not original:
         raise HTTPException(status_code=404, detail="Original brochure not found")
 
-    from uuid import uuid4
-    from copy import deepcopy
-
     duplicated = deepcopy(original)
-    duplicated.id = uuid4()
-    duplicated.code = None  # let frontend or logic assign new code
+    duplicated.id = UUID()
+    duplicated.code = None
     duplicated.status = "active"
     duplicated.created_at = None
     duplicated.updated_at = None
+
     db.add(duplicated)
     db.commit()
     db.refresh(duplicated)
 
     return {"success": True, "id": duplicated.id, "message": "Brochure duplicated"}
-
