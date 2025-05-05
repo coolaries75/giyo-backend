@@ -8,7 +8,8 @@ class Brochure(Base):
     id = Column(Integer, primary_key=True, index=True)
     branch_id = Column(Integer)
     title = Column(String)
-    description = Column(String)
+    description = Column(Text)
+    category = Column(String, nullable=True)
     code = Column(String, unique=True)
     slug = Column(String, unique=True)
     image_url = Column(String)
@@ -16,6 +17,5 @@ class Brochure(Base):
     price = Column(Numeric, nullable=True)  # 🔁 moved higher
     expiry_date = Column(Date, nullable=True)
     infinite = Column(Boolean, default=False)
-    is_active = Column(Boolean, default=True)
     tags = Column(ARRAY(String), nullable=True, default=[])
 
