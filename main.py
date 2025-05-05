@@ -5,7 +5,8 @@ from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from database import engine, Base
-from routers import services, brochure_api, info, marketing_items
+from routers import services, brochure_api, info
+from routers import marketing_items
 
 app = FastAPI()
 

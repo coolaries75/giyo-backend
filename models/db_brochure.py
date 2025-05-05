@@ -20,8 +20,10 @@ class Brochure(Base):
     tags = Column(ARRAY(Text), default=[])
     cta_override = Column(String, nullable=True)
     cta_phone = Column(String)
-    cta_link = Column(String)
     status = Column(String, default="active")
+    cta_link = Column(String)
+
 
 
 # Touch commit for redeploy
+
