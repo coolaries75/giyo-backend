@@ -1,6 +1,7 @@
 # Touch comment to trigger redeploy - 2025-05-03 19:06:54
 # FastAPI main app with API versioning and CORS setup
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from database import engine, Base
 from routers import services, brochure_api, info
 from fastapi.middleware.cors import CORSMiddleware
@@ -17,7 +18,10 @@ def health_check():
 # CORS Configuration
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["https://giyo-frontend.vercel.app"],
+    allow_origins=[
+        "https://giyo-frontend.vercel.app",  # ✅ Production frontend
+        "http://localhost:5173"              # ✅ Dev frontend (Vite)
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
