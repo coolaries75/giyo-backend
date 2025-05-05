@@ -2,9 +2,8 @@
 # FastAPI main app with API versioning and CORS setup
 
 from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-
+from fastapi.middleware.cors import CORSMiddleware
 from database import engine, Base
 from routers import services, brochure_api, info, marketing_items
 
