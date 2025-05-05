@@ -1,63 +1,3 @@
-@router.post("/")
-async def create_brochure(
-    name: str = Form(...),
-    description: str = Form(...),
-    category: str = Form(...),
-    price: float = Form(...),
-    slug: str = Form(None),
-    start_date: str = Form(None),
-    end_date: str = Form(None),
-    cta_override: str = Form(None),
-    code: str = Form(...),
-    status: str = Form("active"),
-    cta_phone: str = Form(...),
-    image: UploadFile = File(...),
-    db: Session = Depends(get_db),
-    x_admin_branch: int = Header(default=None)
-):
-    # Inject all fields to Brochure model
-    brochure_data = {
-        "name": name,
-        "description": description,
-        "category": category,
-        "price": price,
-        "slug": slug,
-        "start_date": start_date,
-        "end_date": end_date,
-        "cta_override": cta_override,
-        "code": code,
-        "status": status,
-        "cta_phone": cta_phone,
-        "image_url": image.filename  # Placeholder logic, image should be uploaded/stored
-    }
-
-    new_brochure = Brochure(**brochure_data)
-
-    # Branch logic
-    if x_admin_branch is not None:
-        new_brochure.branch_id = x_admin_branch
-
-    # CTA logic
-    new_brochure.cta_link = generate_whatsapp_cta_link_ar(
-        phone_number=cta_phone,
-        items=[{"name": name, "code": code}],
-        item_type="brochure"
-    )
-
-    # Status override logic
-    today = date.today()
-    if start_date and start_date > str(today):
-        new_brochure.status = "coming_soon"
-    elif end_date and end_date < str(today):
-        new_brochure.status = "expired"
-    else:
-        new_brochure.status = status
-
-    db.add(new_brochure)
-    db.commit()
-    db.refresh(new_brochure)
-    return {"success": True, "id": new_brochure.id, "cta_link": new_brochure.cta_link}
-
 from fastapi import APIRouter, Depends, HTTPException, Header
 from sqlalchemy.orm import Session
 from models.db_brochure import Brochure
@@ -67,6 +7,11 @@ from datetime import date
 
 router = APIRouter(tags=["Brochures"])
 
+@router.post("/")
+def create_brochure(
+    brochure: dict,
+    db: Session = Depends(get_db),
+    x_admin_branch: int = Header(default=None)
 ):
     required_fields = ["name", "code", "cta_phone"]
     for field in required_fields:
@@ -216,3 +161,4 @@ def duplicate_brochure(brochure_id: UUID, db: Session = Depends(get_db)):
     db.refresh(duplicated)
 
     return {"success": True, "id": duplicated.id, "message": "Brochure duplicated"}
+
