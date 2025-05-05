@@ -1,3 +1,12 @@
+from fastapi import APIRouter, Depends, HTTPException, Header
+from sqlalchemy.orm import Session
+from models.db_brochure import Brochure
+from database import get_db
+from utils.utils_cta_status import generate_whatsapp_cta_link_ar
+from datetime import date
+
+router = APIRouter(tags=["Brochures"])
+
 @router.post("/")
 async def create_brochure(
     name: str = Form(...),
@@ -15,7 +24,6 @@ async def create_brochure(
     db: Session = Depends(get_db),
     x_admin_branch: int = Header(default=None)
 ):
-    # Inject all fields to Brochure model
     brochure_data = {
         "name": name,
         "description": description,
@@ -28,23 +36,20 @@ async def create_brochure(
         "code": code,
         "status": status,
         "cta_phone": cta_phone,
-        "image_url": image.filename  # Placeholder logic, image should be uploaded/stored
+        "image_url": image.filename
     }
 
     new_brochure = Brochure(**brochure_data)
 
-    # Branch logic
     if x_admin_branch is not None:
         new_brochure.branch_id = x_admin_branch
 
-    # CTA logic
     new_brochure.cta_link = generate_whatsapp_cta_link_ar(
         phone_number=cta_phone,
         items=[{"name": name, "code": code}],
         item_type="brochure"
     )
 
-    # Status override logic
     today = date.today()
     if start_date and start_date > str(today):
         new_brochure.status = "coming_soon"
@@ -58,15 +63,34 @@ async def create_brochure(
     db.refresh(new_brochure)
     return {"success": True, "id": new_brochure.id, "cta_link": new_brochure.cta_link}
 
-from fastapi import APIRouter, Depends, HTTPException, Header
-from sqlalchemy.orm import Session
-from models.db_brochure import Brochure
-from database import get_db
-from utils.utils_cta_status import generate_whatsapp_cta_link_ar
-from datetime import date
+    new_brochure = Brochure(**brochure)
 
-router = APIRouter(tags=["Brochures"])
+    # ✅ Inject branch_id if sent via header
+    if x_admin_branch is not None:
+        new_brochure.branch_id = x_admin_branch
 
+    # ✅ CTA logic
+    new_brochure.cta_link = generate_whatsapp_cta_link_ar(
+        phone_number=brochure["cta_phone"],
+        items=[{"name": brochure["name"], "code": brochure["code"]}],
+        item_type="brochure"
+    )
+
+    # ✅ Status logic based on dates
+    today = date.today()
+    if brochure.get("start_date") and brochure["start_date"] > today:
+        new_brochure.status = "coming_soon"
+    elif brochure.get("end_date") and brochure["end_date"] < today:
+        new_brochure.status = "expired"
+    else:
+        new_brochure.status = brochure.get("status", "active")
+
+    db.add(new_brochure)
+    db.commit()
+    db.refresh(new_brochure)
+    return {"success": True, "id": new_brochure.id, "cta_link": new_brochure.cta_link}
+
+# --- Injected GET endpoints ---
 
 from typing import Optional, List
 from uuid import UUID
@@ -182,3 +206,4 @@ def duplicate_brochure(brochure_id: UUID, db: Session = Depends(get_db)):
     db.refresh(duplicated)
 
     return {"success": True, "id": duplicated.id, "message": "Brochure duplicated"}
+
