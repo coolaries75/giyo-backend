@@ -36,6 +36,8 @@ async def create_brochure(
         # ✅ Save image with unique filename
         ext = os.path.splitext(image.filename)[-1]
         unique_filename = f"{uuid4().hex}{ext}"
+        # Ensure the target directory exists at runtime (for Railway or fresh deploys)
+        os.makedirs("static/brochures", exist_ok=True)
         save_path = f"static/brochures/{unique_filename}"
         with open(save_path, "wb") as buffer:
             buffer.write(await image.read())
