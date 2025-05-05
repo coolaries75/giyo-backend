@@ -68,33 +68,6 @@ from datetime import date
 router = APIRouter(tags=["Brochures"])
 
 
-    # ✅ Inject branch_id if sent via header
-    if x_admin_branch is not None:
-        new_brochure.branch_id = x_admin_branch
-
-    # ✅ CTA logic
-    new_brochure.cta_link = generate_whatsapp_cta_link_ar(
-        phone_number=brochure["cta_phone"],
-        items=[{"name": brochure["name"], "code": brochure["code"]}],
-        item_type="brochure"
-    )
-
-    # ✅ Status logic based on dates
-    today = date.today()
-    if brochure.get("start_date") and brochure["start_date"] > today:
-        new_brochure.status = "coming_soon"
-    elif brochure.get("end_date") and brochure["end_date"] < today:
-        new_brochure.status = "expired"
-    else:
-        new_brochure.status = brochure.get("status", "active")
-
-    db.add(new_brochure)
-    db.commit()
-    db.refresh(new_brochure)
-    return {"success": True, "id": new_brochure.id, "cta_link": new_brochure.cta_link}
-
-# --- Injected GET endpoints ---
-
 from typing import Optional, List
 from uuid import UUID
 
