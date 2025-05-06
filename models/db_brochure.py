@@ -1,12 +1,14 @@
 from sqlalchemy.dialects.postgresql import ARRAY
 from sqlalchemy import Column, Integer, String, Boolean, Date, Numeric, Text
 from database import Base
+from sqlalchemy.dialects.postgresql import UUID
+import uuid
 
 class Brochure(Base):
     __tablename__ = "brochures"
 
     id = Column(Integer, primary_key=True, index=True)
-    branch_id = Column(Integer)
+    branch_id = Column(UUID(as_uuid=True))
     title = Column(String)
     description = Column(Text)
     category = Column(String, nullable=True)
