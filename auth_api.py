@@ -45,7 +45,7 @@ async def login(request: LoginRequest):
         logger.info("Hash verification starting...")
 
         # Final: bcrypt.checkpw with encoded values only
-        if not bcrypt.checkpw(request.password.encode(), user["password"]):
+        if not bcrypt.checkpw(request.password.encode(), user["password"].encode()):
             logger.error("Password verification failed")
             raise HTTPException(status_code=401, detail="Invalid credentials")
 
