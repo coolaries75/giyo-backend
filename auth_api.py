@@ -11,10 +11,9 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 # Verified in-memory user database (hash generated with bcrypt 3.2.0)
-# Hash for "admin123": $2b$12$YOCEbLxW94Q5Y0Z8QQm0S.VNccXPiLPduNWr0Qt1M9ss2zkCTT2u2
 users_db = {
     "admin@giyo.com": {
-        "password": "$2b$12$YOCEbLxW94Q5Y0Z8QQm0S.VNccXPiLPduNWr0Qt1M9ss2zkCTT2u2",
+        "password": "$2b$12$c1dl1hLfMs6Roe0G4zGDkePqt5VPQq.znqYX9m/2T.WdwuGLyG4t",
         "role": "super_admin",
         "branch_id": None
     }
