@@ -27,7 +27,7 @@ async def create_brochure(
     cta_phone: str = Form(...),
     image: UploadFile = File(...),
     db: Session = Depends(get_db),
-    branch_id: UUID = Header(..., alias="x-admin-branch")  # Proper UUID header
+    branch_id: UUID = Header(..., alias="x-admin-branch")
 ):
     try:
         print(f"DEBUG: Received branch_id: {branch_id} ({type(branch_id)})")
@@ -57,14 +57,12 @@ async def create_brochure(
             "status": status,
             "cta_phone": cta_phone,
             "image_url": f"/static/brochures/{unique_filename}",
-            "branch_id": branch_id  # Using the UUID parameter directly
+            "branch_id": branch_id
         }
-
-        # ... rest of the endpoint code ...
 
         new_brochure = Brochure(**brochure_data)
 
-        # ✅ Date-based status override
+        # Date-based status override
         today = date.today()
         if start_date_parsed and start_date_parsed > today:
             new_brochure.status = "coming_soon"
@@ -77,10 +75,11 @@ async def create_brochure(
         db.commit()
         db.refresh(new_brochure)
 
-        # ✅ Generate CTA link
+        # Generate CTA link - CORRECTED VERSION
         new_brochure.cta_link = generate_whatsapp_cta_link_ar(
             phone_number=cta_phone,
-            items=[{"name": new_brochure.title, "code": new_brochure.code}],
+            title=new_brochure.title,
+            item_code=new_brochure.code,
             item_type="brochure"
         )
 
@@ -95,9 +94,9 @@ async def create_brochure(
 # ---------- GET Brochures ----------
 @router.get("/", response_model=List[dict])
 def get_brochures(
-    branch_id: Optional[UUID] = None,  # Change from int to UUID
+    branch_id: Optional[UUID] = None,
     db: Session = Depends(get_db),
-    x_admin_branch: Optional[UUID] = Header(default=None, alias="x-admin-branch")  # Update type
+    x_admin_branch: Optional[UUID] = Header(default=None, alias="x-admin-branch")
 ):
     query = db.query(Brochure).filter(Brochure.is_deleted == False)
     if branch_id:
@@ -133,7 +132,8 @@ def update_brochure(
         if getattr(brochure, "title", None) and getattr(brochure, "cta_phone", None):
             brochure.cta_link = generate_whatsapp_cta_link_ar(
                 phone_number=brochure.cta_phone,
-                items=[{"name": brochure.title, "code": brochure.code}],
+                title=brochure.title,
+                item_code=brochure.code,
                 item_type="brochure"
             )
 
