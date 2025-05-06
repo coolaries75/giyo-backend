@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 # Verified in-memory user database (hash generated with bcrypt 3.2.0)
 users_db = {
     "admin@giyo.com": {
-        "password": "$2b$12$Q9mQ3sW7lhqGhq6zTdfUSei9W2S95hZ6fwK1glEEJZ3KQn.NmXL9K",
+        "password": "$2b$12$dIj67tU.yVbyLPKrrvIMreGBmy0y21VxVQ9BNMFohZWE9oF5wUl4K",  # admin123
         "role": "super_admin",
         "branch_id": None
     }
