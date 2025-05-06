@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 # Verified in-memory user database
 users_db = {
     "admin@giyo.com": {
-        "password": "$2b$12$iXvHgskDji15NHHtHQeNG6edNtiAcv.TbJNrwoUZOmnsKizdsLkzW",  # admin123
+        "password": "$2b$12$tmFv9vaxhRFDr4DuoonNqeHUaxAPdNENszAutXUBC3YV.XvU.e2TW",  # admin123
         "role": "super_admin",
         "branch_id": None
     }
