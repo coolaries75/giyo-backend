@@ -1,22 +1,25 @@
+# auth_api.py
+
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from passlib.hash import bcrypt
 from jose import jwt
 from datetime import datetime, timedelta
 
-SECRET_KEY = "giyo-secret-key"
-ALGORITHM = "HS256"
-
-router = APIRouter()
-
-# Temporary in-memory user (replace with DB in future)
+# In-memory user database (temporary)
 users_db = {
     "admin@giyo.com": {
-        "password": "$2b$12$u1yG58/FZrGbG/pP5r8nXeAiJ9tH3NUoxOZ3sO0WFejK8/E.XmT8K",  # password: admin123
+        "password": "$2b$12$u1yG58/FZrGbG/pP5r8nXeAiJ9tH3NUoxOZ3sO0WFejK8/E.XmT8K",  # admin123
         "role": "super_admin",
         "branch_id": None
     }
 }
+
+# JWT config
+SECRET_KEY = "giyo-secret-key"
+ALGORITHM = "HS256"
+
+router = APIRouter()
 
 class LoginRequest(BaseModel):
     email: str
