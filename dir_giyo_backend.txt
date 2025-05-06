@@ -1,0 +1,2 @@
+Directory listing for D:\GiyoLanding\giyo_backend (excluding node_modules, .vercel, dist)
+ 

@@ -1,0 +1,59 @@
+Directory listing for: D:\GiyoLanding\giyo_backend\
+
+D:\GiyoLanding\giyo_backend\~1file_name
+D:\GiyoLanding\giyo_backend\~1file_name
+D:\GiyoLanding\giyo_backend\~1file_name
+D:\GiyoLanding\giyo_backend\~1file_name
+D:\GiyoLanding\giyo_backend\~1file_name
+D:\GiyoLanding\giyo_backend\~1file_name
+D:\GiyoLanding\giyo_backend\~1file_name
+D:\GiyoLanding\giyo_backend\~1file_name
+D:\GiyoLanding\giyo_backend\~1file_name
+D:\GiyoLanding\giyo_backend\~1file_name
+D:\GiyoLanding\giyo_backend\~1file_name
+D:\GiyoLanding\giyo_backend\~1file_name
+D:\GiyoLanding\giyo_backend\~1file_name
+D:\GiyoLanding\giyo_backend\models\
+D:\GiyoLanding\giyo_backend\models\brochure_model.py
+D:\GiyoLanding\giyo_backend\models\db_brochure.py
+D:\GiyoLanding\giyo_backend\models\db_logs.py
+D:\GiyoLanding\giyo_backend\models\db_service.py
+D:\GiyoLanding\giyo_backend\models\service_model.py
+D:\GiyoLanding\giyo_backend\models\__pycache__\
+D:\GiyoLanding\giyo_backend\models\__pycache__\brochure_model.cpython-313.pyc
+D:\GiyoLanding\giyo_backend\models\__pycache__\db_brochure.cpython-313.pyc
+D:\GiyoLanding\giyo_backend\models\__pycache__\db_logs.cpython-313.pyc
+D:\GiyoLanding\giyo_backend\models\__pycache__\db_service.cpython-313.pyc
+D:\GiyoLanding\giyo_backend\models\__pycache__\service_model.cpython-313.pyc
+D:\GiyoLanding\giyo_backend\routers\
+D:\GiyoLanding\giyo_backend\routers\brochures - v1.5.py
+D:\GiyoLanding\giyo_backend\routers\brochures.py
+D:\GiyoLanding\giyo_backend\routers\brochure_api - before dropin-Replacement.py
+D:\GiyoLanding\giyo_backend\routers\brochure_api.py
+D:\GiyoLanding\giyo_backend\routers\info.py
+D:\GiyoLanding\giyo_backend\routers\marketing_items.py
+D:\GiyoLanding\giyo_backend\routers\services - v1.5.py
+D:\GiyoLanding\giyo_backend\routers\services.py
+D:\GiyoLanding\giyo_backend\routers\__pycache__\
+D:\GiyoLanding\giyo_backend\routers\__pycache__\brochures.cpython-313.pyc
+D:\GiyoLanding\giyo_backend\routers\__pycache__\brochure_api.cpython-313.pyc
+D:\GiyoLanding\giyo_backend\routers\__pycache__\info.cpython-313.pyc
+D:\GiyoLanding\giyo_backend\routers\__pycache__\marketing_items.cpython-313.pyc
+D:\GiyoLanding\giyo_backend\routers\__pycache__\services.cpython-313.pyc
+D:\GiyoLanding\giyo_backend\utils\
+D:\GiyoLanding\giyo_backend\utils\auto_generate_util.py
+D:\GiyoLanding\giyo_backend\utils\logging_db_util.py
+D:\GiyoLanding\giyo_backend\utils\logging_debug_util.py
+D:\GiyoLanding\giyo_backend\utils\pagination_util - Copy.py
+D:\GiyoLanding\giyo_backend\utils\pagination_util.py
+D:\GiyoLanding\giyo_backend\utils\response_wrapper.py
+D:\GiyoLanding\giyo_backend\utils\role_check_util.py
+D:\GiyoLanding\giyo_backend\utils\utils_cta_status.py
+D:\GiyoLanding\giyo_backend\utils\__pycache__\
+D:\GiyoLanding\giyo_backend\utils\__pycache__\logging_db_util.cpython-313.pyc
+D:\GiyoLanding\giyo_backend\utils\__pycache__\logging_debug_util.cpython-313.pyc
+D:\GiyoLanding\giyo_backend\utils\__pycache__\logging_util.cpython-313.pyc
+D:\GiyoLanding\giyo_backend\utils\__pycache__\pagination_util.cpython-313.pyc
+D:\GiyoLanding\giyo_backend\utils\__pycache__\response_wrapper.cpython-313.pyc
+D:\GiyoLanding\giyo_backend\utils\__pycache__\role_check_util.cpython-313.pyc
+D:\GiyoLanding\giyo_backend\utils\__pycache__\utils_cta_status.cpython-313.pyc
