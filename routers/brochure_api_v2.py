@@ -20,7 +20,6 @@ async def create_brochure(
     price: float = Form(...),
     slug: str = Form(None),
     start_date: str = Form(None),
-    branch_id: UUID = Header(..., alias="x-admin-branch"),
     end_date: str = Form(None),
     cta_override: str = Form(None),
     code: str = Form(...),
@@ -28,24 +27,18 @@ async def create_brochure(
     cta_phone: str = Form(...),
     image: UploadFile = File(...),
     db: Session = Depends(get_db),
-    x_admin_branch: int = Header(default=None)
+    branch_id: UUID = Header(..., alias="x-admin-branch")  # Proper UUID header
 ):
-
-    print("DEBUG: Running create_brochure with branch_id type:", type(branch_id))
-
     try:
-        # 🚨 Ensure x-admin-branch is present
-        if x_admin_branch is None:
-            raise HTTPException(status_code=400, detail="Missing x-admin-branch header")
+        print(f"DEBUG: Received branch_id: {branch_id} ({type(branch_id)})")
 
-        # ✅ Parse dates
+        # Date parsing
         start_date_parsed = datetime.strptime(start_date, "%Y-%m-%d").date() if start_date else None
         end_date_parsed = datetime.strptime(end_date, "%Y-%m-%d").date() if end_date else None
 
-        # ✅ Save image with unique filename
+        # Image handling
         ext = os.path.splitext(image.filename)[-1]
         unique_filename = f"{uuid4().hex}{ext}"
-        # Ensure the target directory exists at runtime
         os.makedirs("static/brochures", exist_ok=True)
         save_path = f"static/brochures/{unique_filename}"
         with open(save_path, "wb") as buffer:
@@ -64,8 +57,10 @@ async def create_brochure(
             "status": status,
             "cta_phone": cta_phone,
             "image_url": f"/static/brochures/{unique_filename}",
-            "branch_id": x_admin_branch
+            "branch_id": branch_id  # Using the UUID parameter directly
         }
+
+        # ... rest of the endpoint code ...
 
         new_brochure = Brochure(**brochure_data)
 
@@ -100,9 +95,9 @@ async def create_brochure(
 # ---------- GET Brochures ----------
 @router.get("/", response_model=List[dict])
 def get_brochures(
-    branch_id: Optional[int] = None,
+    branch_id: Optional[UUID] = None,  # Change from int to UUID
     db: Session = Depends(get_db),
-    x_admin_branch: Optional[int] = Header(default=None)
+    x_admin_branch: Optional[UUID] = Header(default=None, alias="x-admin-branch")  # Update type
 ):
     query = db.query(Brochure).filter(Brochure.is_deleted == False)
     if branch_id:
