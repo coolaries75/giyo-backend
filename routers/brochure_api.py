@@ -30,6 +30,9 @@ async def create_brochure(
     db: Session = Depends(get_db),
     x_admin_branch: int = Header(default=None)
 ):
+
+    print("DEBUG: Running create_brochure with branch_id type:", type(branch_id))
+
     try:
         # 🚨 Ensure x-admin-branch is present
         if x_admin_branch is None:
