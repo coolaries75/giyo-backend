@@ -20,6 +20,7 @@ async def create_brochure(
     price: float = Form(...),
     slug: str = Form(None),
     start_date: str = Form(None),
+    branch_id: UUID = Header(..., alias="x-admin-branch"),
     end_date: str = Form(None),
     cta_override: str = Form(None),
     code: str = Form(...),
