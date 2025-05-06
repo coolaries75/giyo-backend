@@ -1,11 +1,10 @@
-# Updated dependenciesfastapi
+# Updated dependencies for FastAPI app
 fastapi==0.110.0
 uvicorn[standard]==0.29.0
 sqlalchemy==2.0.29
 psycopg2-binary==2.9.9
 python-dotenv==1.0.1
-python-multipart==0.0.9  # Needed if you're handling file uploads or forms
-passlib[bcrypt]
+python-multipart==0.0.9 
 python-jose
-bcrypt==3.2.0
+bcrypt==4.3.1
 
