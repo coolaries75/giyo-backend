@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 # ✅ Updated hash for password: admin123
 users_db = {
     "admin@giyo.com": {
-        "password": "$2b$12$AxmqyDAnKHCvDpyCGbM0YuUVE8r7lx2ik0Khe3JFxmO8lh1i06r/2",  # admin123
+        "$2b$12$BdPxNri1ncc0xFDdTibM6OJLDfFrh3pA6u.Nj0TuS7fjrPmH8lq/a",  # admin123
         "role": "super_admin",
         "branch_id": None
     }
