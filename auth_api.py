@@ -9,7 +9,7 @@ from datetime import datetime, timedelta
 # In-memory user database (temporary)
 users_db = {
     "admin@giyo.com": {
-        "password": "$2b$12$C6JhI0GIXYHzBk4iyw0/UeP8HHTPW.hMwvZo0uGE3geFMaGIs1pda",  # admin123
+        "password": "$2b$12$Wqhw8IikE6UwIV1SmDNLje8sClZb9d3aAfM3q7i2gi8oUUBMoyrOO",  # admin123
         "role": "super_admin",
         "branch_id": None
     }
