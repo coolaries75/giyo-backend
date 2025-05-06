@@ -1,10 +1,11 @@
-# auth_api.py - Updated with verified hash and debug logging
+# auth_api.py - Updated with verified hash and downgraded bcrypt.checkpw()
 from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel
 from passlib.hash import bcrypt
 from jose import jwt
 from datetime import datetime, timedelta
 import logging
+import bcrypt as lowbcrypt  # native bcrypt for checkpw
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -43,9 +44,9 @@ async def login(request: LoginRequest):
         
         logger.info(f"Stored hash: {user['password']}")
         logger.info(f"Hash verification starting...")
-        
-        # Verify password with bcrypt 3.2.0
-        if not bcrypt.verify(request.password, user["password"]):
+
+        # Verify password using native bcrypt.checkpw (downgrade for consistency)
+        if not lowbcrypt.checkpw(request.password.encode(), user["password"].encode()):
             logger.error("Password verification failed")
             logger.info(f"Hash of provided password: {bcrypt.hash(request.password)}")
             raise HTTPException(status_code=401, detail="Invalid credentials")
