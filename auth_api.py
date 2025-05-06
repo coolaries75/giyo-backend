@@ -8,11 +8,11 @@ from datetime import datetime, timedelta
 
 # In-memory user database (temporary)
 users_db = {
-    "admin@giyo.com": {
-        "password": "$2b$12$Wqhw8IikE6UwIV1SmDNLje8sClZb9d3aAfM3q7i2gi8oUUBMoyrOO",  # admin123
-        "role": "super_admin",
-        "branch_id": None
-    }
+  "admin@giyo.com": {
+    "password": "$2b$12$7uVjNK8UAcqaHErbP5kXcOTg3OwMF2tCNmNSElJTKRMJ1m5FbWdyC",
+    "role": "super_admin",
+    "branch_id": None
+  }
 }
 
 # JWT config
