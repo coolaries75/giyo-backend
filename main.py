@@ -5,7 +5,7 @@ from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from database import engine, Base
-from routers import services, brochure_api, info
+from routers import services, brochure_api_v2, info
 from routers import marketing_items
 from auth_api import router as auth_router
 
@@ -33,7 +33,7 @@ app.add_middleware(
 # Include Routers with API Versioning
 app.include_router(auth_router)
 app.include_router(services.router, prefix="/api/v1/services", tags=["Services"])
-app.include_router(brochure_api.router, prefix="/api/v1/brochures", tags=["Brochures"])
+app.include_router(brochure_api_v2.router, prefix="/api/v1/brochures", tags=["Brochures"])
 app.include_router(info.router, prefix="/api/v1", tags=["Info"])
 app.include_router(marketing_items.router, prefix="/api/v1/marketing-items", tags=["Marketing Items"])
 
