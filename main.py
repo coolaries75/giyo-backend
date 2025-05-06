@@ -7,6 +7,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from database import engine, Base
 from routers import services, brochure_api, info
 from routers import marketing_items
+from auth_api import router as auth_router
+app.include_router(auth_router)
 
 app = FastAPI()
 
