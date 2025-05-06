@@ -10,10 +10,10 @@ import bcrypt  # low-level only
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# ✅ Updated hash for password: admin123
+# ✅ Corrected hash structure for admin123
 users_db = {
     "admin@giyo.com": {
-        "$2b$12$BdPxNri1ncc0xFDdTibM6OJLDfFrh3pA6u.Nj0TuS7fjrPmH8lq/a",  # admin123
+        "password": "$2b$12$BdPxNri1ncc0xFDdTibM6OJLDfFrh3pA6u.Nj0TuS7fjrPmH8lq/a",
         "role": "super_admin",
         "branch_id": None
     }
