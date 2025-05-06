@@ -1,29 +1,28 @@
-# auth_api.py - Updated with verified hash and downgraded bcrypt.checkpw()
-from fastapi import APIRouter, HTTPException, Request
+# auth_api.py - Clean downgraded bcrypt version (no passlib)
+from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
-from passlib.hash import bcrypt
 from jose import jwt
 from datetime import datetime, timedelta
 import logging
-import bcrypt as lowbcrypt  # native bcrypt for checkpw
+import bcrypt  # low-level only
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Verified in-memory user database (hash generated with bcrypt 3.2.0)
+# Verified in-memory user database
 users_db = {
     "admin@giyo.com": {
-        "password": "$2b$12$dIj67tU.yVbyLPKrrvIMreGBmy0y21VxVQ9BNMFohZWE9oF5wUl4K",  # admin123
+        "password": b"$2b$12$dIj67tU.yVbyLPKrrvIMreGBmy0y21VxVQ9BNMFohZWE9oF5wUl4K",  # admin123
         "role": "super_admin",
         "branch_id": None
     }
 }
 
 # JWT config
-SECRET_KEY = "giyo-secret-key"  # In production, use env variable!
+SECRET_KEY = "giyo-secret-key"
 ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 1440  # 24 hours
+ACCESS_TOKEN_EXPIRE_MINUTES = 1440
 
 router = APIRouter(tags=["Authentication"])
 
@@ -36,22 +35,20 @@ async def login(request: LoginRequest):
     try:
         logger.info(f"Login attempt for: {request.email}")
         logger.info(f"Provided password length: {len(request.password)} chars")
-        
+
         user = users_db.get(request.email)
         if not user:
             logger.error("User not found in database")
             raise HTTPException(status_code=401, detail="Invalid credentials")
-        
-        logger.info(f"Stored hash: {user['password']}")
-        logger.info(f"Hash verification starting...")
 
-        # Verify password using native bcrypt.checkpw (downgrade for consistency)
-        if not lowbcrypt.checkpw(request.password.encode(), user["password"].encode()):
+        logger.info(f"Stored hash: {user['password']}")
+        logger.info("Hash verification starting...")
+
+        # Final: bcrypt.checkpw with encoded values only
+        if not bcrypt.checkpw(request.password.encode(), user["password"]):
             logger.error("Password verification failed")
-            logger.info(f"Hash of provided password: {bcrypt.hash(request.password)}")
             raise HTTPException(status_code=401, detail="Invalid credentials")
-        
-        # Create JWT token
+
         token_data = {
             "sub": request.email,
             "role": user["role"],
@@ -59,10 +56,10 @@ async def login(request: LoginRequest):
             "exp": datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
         }
         token = jwt.encode(token_data, SECRET_KEY, algorithm=ALGORITHM)
-        
+
         logger.info("Login successful")
         return {"access_token": token, "token_type": "bearer"}
-    
+
     except Exception as e:
         logger.error(f"Login error: {str(e)}")
         raise HTTPException(status_code=500, detail="Internal server error")
