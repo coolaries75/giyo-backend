@@ -8,7 +8,7 @@ from database import engine, Base
 from routers import services, brochure_api, info
 from routers import marketing_items
 from auth_api import router as auth_router
-app.include_router(auth_router)
+
 
 app = FastAPI()
 
@@ -31,6 +31,7 @@ app.add_middleware(
 )
 
 # Include Routers with API Versioning
+app.include_router(auth_router)
 app.include_router(services.router, prefix="/api/v1/services", tags=["Services"])
 app.include_router(brochure_api.router, prefix="/api/v1/brochures", tags=["Brochures"])
 app.include_router(info.router, prefix="/api/v1", tags=["Info"])
